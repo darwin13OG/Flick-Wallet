@@ -99,7 +99,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     analytics.categoryBreakdown[0];
 
   return (
-    <div className="flex flex-col gap-5 pb-8">
+    <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-5 pb-8">
+      <div className="lg:col-span-6 flex flex-col gap-5">
       {/* 1. Indicador de Score Financiero y Métricas de Ahorro */}
       <div className="rounded-3xl p-6 bg-gradient-to-br from-[#493ee5] via-[#635bff] to-[#321ed2] text-white shadow-[0_20px_36px_-8px_rgba(99,91,255,0.45),inset_3px_4px_7px_rgba(255,255,255,0.45),inset_-4px_-4px_8px_rgba(15,0,105,0.4)] flex flex-col gap-4">
         <div className="flex items-center justify-between">
@@ -285,9 +286,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
           </div>
         </div>
       </div>
+      </div>
 
       {/* 3. Gráfico de Barras por Categoría */}
-      <div className={`rounded-3xl p-5 flex flex-col gap-3.5 ${cardCls}`}>
+      <div className={`lg:col-span-6 rounded-3xl p-5 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
         <h3 className="font-display text-[16px] font-bold">Desglose por Categoría</h3>
 
         <div className="flex flex-col gap-3">

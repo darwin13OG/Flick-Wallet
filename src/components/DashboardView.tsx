@@ -149,13 +149,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   return (
     <div className="flex flex-col gap-5 pb-8">
       {/* Bienvenido y Nombre del Usuario */}
-      <div className="px-1 pt-1">
-        <h2 className="font-display text-[22px] font-extrabold tracking-tight leading-tight">
+      <div className="px-1 pt-1 flex items-center justify-between">
+        <h2 className="font-display text-[22px] lg:text-[26px] font-extrabold tracking-tight leading-tight">
           {profile.name ? `Bienvenido, ${profile.name}` : 'Bienvenido'}
         </h2>
       </div>
 
-      {/* Tarjeta de Saldo Total */}
+      {/* Contenedor Principal Responsivo: 1 columna en móvil, 12 columnas bien distribuidas en PC */}
+      <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-5">
+        {/* Columna Izquierda en PC (7 cols): Saldo Total + Resumen Rápido + Radar de Fugas */}
+        <div className="lg:col-span-7 flex flex-col gap-5">
+          {/* Tarjeta de Saldo Total */}
       <div className="relative rounded-3xl p-6 bg-gradient-to-br from-[#635bff] via-[#564cf2] to-[#3f34d9] text-white shadow-[0_20px_36px_-8px_rgba(99,91,255,0.45),inset_3px_4px_7px_rgba(255,255,255,0.45),inset_-4px_-4px_8px_rgba(15,0,105,0.4)] overflow-hidden">
         <div className="flex items-center justify-between mb-2">
           <div className="flex items-center gap-2">
@@ -458,9 +462,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
         )}
       </div>
+      </div>
 
-      {/* Listado de Últimos Movimientos */}
-      <div className="flex flex-col gap-3">
+      {/* Columna Derecha en PC (5 cols): Listado de Últimos Movimientos */}
+      <div className="lg:col-span-5 flex flex-col gap-3">
         <div className="flex items-center justify-between px-1">
           <h3 className="font-display text-[16px] font-bold">Últimos Movimientos</h3>
           <button
@@ -597,6 +602,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             })}
           </div>
         )}
+      </div>
       </div>
     </div>
   );

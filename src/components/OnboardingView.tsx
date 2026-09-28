@@ -93,49 +93,54 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
     : 'bg-[#f0f4f8] text-[#171c1f] placeholder:text-[#777587] shadow-[inset_2px_2px_5px_rgba(15,23,42,0.08),inset_-2px_-2px_5px_rgba(255,255,255,0.9)] focus:shadow-[inset_2px_2px_4px_rgba(73,62,229,0.18),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]';
 
   return (
-    <div className="px-4 pt-6 pb-10 flex flex-col gap-6 max-w-md mx-auto w-full">
-      {/* Hero / Welcome Clay Pod */}
-      <div className="flex flex-col items-center text-center pt-1">
-        <WalletClayLogo size="lg" />
-        <h2
-          className={`font-display text-[24px] leading-[32px] font-bold tracking-tight mb-1 ${
-            isDark ? 'text-white' : 'text-[#171c1f]'
-          }`}
-        >
-          Configura tu Billetera Viva
-        </h2>
-        <p
-          className={`text-[14px] leading-[20px] px-1 ${
-            isDark ? 'text-slate-400' : 'text-[#464555]'
-          }`}
-        >
-          Sin contraseñas ni fricción. Personaliza tu experiencia en 30 segundos y guarda todo 100%
-          privado en tu móvil.
-        </p>
-      </div>
+    <div className="px-4 sm:px-6 lg:px-10 pt-6 lg:py-12 pb-10 flex flex-col lg:grid lg:grid-cols-12 lg:gap-10 lg:items-center gap-6 max-w-md md:max-w-xl lg:max-w-5xl mx-auto w-full">
+      {/* Left Column on PC / Top on Mobile: Hero + Step Indicator */}
+      <div className="lg:col-span-5 flex flex-col items-center lg:items-start text-center lg:text-left gap-5">
+        <div className="flex flex-col items-center lg:items-start pt-1">
+          <WalletClayLogo size="lg" />
+          <h2
+            className={`font-display text-[24px] lg:text-[32px] leading-[32px] lg:leading-[40px] font-bold tracking-tight mb-1.5 ${
+              isDark ? 'text-white' : 'text-[#171c1f]'
+            }`}
+          >
+            Configura tu Billetera Viva
+          </h2>
+          <p
+            className={`text-[14px] lg:text-[15px] leading-[20px] lg:leading-[24px] px-1 lg:px-0 ${
+              isDark ? 'text-slate-400' : 'text-[#464555]'
+            }`}
+          >
+            Sin contraseñas ni fricción. Personaliza tu experiencia en 30 segundos y guarda todo 100%
+            privado en tu dispositivo.
+          </p>
+        </div>
 
-      {/* Step Indicator Pill */}
-      <div
-        className={`flex items-center justify-between px-4 py-1.5 rounded-full ${
-          isDark
-            ? 'bg-[#12161f]'
-            : 'bg-[#f0f4f8] shadow-[inset_1px_1px_3px_rgba(15,23,42,0.06),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]'
-        }`}
-      >
-        <div className="flex items-center gap-1.5">
-          <span className="w-2.5 h-2.5 rounded-full bg-[#493ee5] shadow-[0_0_8px_rgba(99,91,255,0.6)]" />
-          <span className="font-display text-[10px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff] uppercase tracking-wider">
-            Paso {step} de 2
+        {/* Step Indicator Pill */}
+        <div
+          className={`w-full flex items-center justify-between px-4 py-2 rounded-full ${
+            isDark
+              ? 'bg-[#1b202c]'
+              : 'bg-[#f0f4f8] shadow-[inset_1px_1px_3px_rgba(15,23,42,0.06),inset_-1px_-1px_3px_rgba(255,255,255,0.8)]'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="w-2.5 h-2.5 rounded-full bg-[#493ee5] shadow-[0_0_8px_rgba(99,91,255,0.6)]" />
+            <span className="font-display text-[11px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff] uppercase tracking-wider">
+              Paso {step} de 2
+            </span>
+          </div>
+          <span
+            className={`font-display text-[11px] font-semibold ${
+              isDark ? 'text-slate-400' : 'text-[#464555]'
+            }`}
+          >
+            {step === 1 ? 'Datos Personales' : 'Presupuesto y Metas'}
           </span>
         </div>
-        <span
-          className={`font-display text-[10px] font-semibold ${
-            isDark ? 'text-slate-400' : 'text-[#464555]'
-          }`}
-        >
-          {step === 1 ? 'Datos Personales' : 'Presupuesto y Metas'}
-        </span>
       </div>
+
+      {/* Right Column on PC / Bottom on Mobile: Step Forms */}
+      <div className="lg:col-span-7 w-full">
 
       {/* PASO 1: Nombre y ¿Cómo te identificas? */}
       {step === 1 && (
@@ -493,6 +498,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
           </div>
         </form>
       )}
+      </div>
     </div>
   );
 };

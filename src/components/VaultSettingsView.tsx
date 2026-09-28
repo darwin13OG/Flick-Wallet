@@ -106,8 +106,9 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
         </div>
       )}
 
+      <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-5">
       {/* 1. Perfil de Usuario, Foto Personalizada y Moneda */}
-      <div className={`rounded-3xl p-5 flex flex-col gap-4 ${cardCls}`}>
+      <div className={`lg:col-span-7 rounded-3xl p-5 lg:p-6 flex flex-col gap-4 ${cardCls}`}>
         <div className="flex items-center justify-between">
           <div>
             <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#493ee5] dark:text-[#c3c0ff]">
@@ -242,7 +243,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
       </div>
 
       {/* 2. Presupuesto Mensual y Tope de Gastos Hormiga */}
-      <div className={`rounded-3xl p-5 flex flex-col gap-4 ${cardCls}`}>
+      <div className={`lg:col-span-5 rounded-3xl p-5 lg:p-6 flex flex-col gap-4 ${cardCls}`}>
         <div>
           <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3]">
             Presupuesto y Límites
@@ -301,6 +302,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
             />
           </div>
         </div>
+      </div>
       </div>
     </div>
   );

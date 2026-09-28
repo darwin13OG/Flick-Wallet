@@ -118,9 +118,12 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     : 'bg-[#ffffff] text-[#171c1f] shadow-[0_6px_14px_-4px_rgba(15,23,42,0.08),inset_2px_2px_4px_rgba(255,255,255,0.95),inset_-2px_-2px_4px_rgba(15,23,42,0.04)] active:translate-y-0.5 active:scale-95';
 
   return (
-    <form onSubmit={handleSave} className="flex flex-col gap-3.5 pb-8">
-      {/* BLOQUE SUPERIOR UNIFICADO: Tipo + Visor de Monto + Teclado (Visible sin bajar) */}
-      <div className={`rounded-3xl p-4 flex flex-col gap-3 ${cardCls}`}>
+    <form
+      onSubmit={handleSave}
+      className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-3.5 pb-8"
+    >
+      {/* BLOQUE SUPERIOR / COLUMNA IZQUIERDA EN PC: Tipo + Visor de Monto + Teclado (Visible sin bajar) */}
+      <div className={`lg:col-span-6 rounded-3xl p-4 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
         {/* 1. Selector de Tipo de Movimiento */}
         <div className="grid grid-cols-3 gap-2">
           {[
@@ -266,8 +269,8 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
         </button>
       </div>
 
-      {/* Descripción y Categoría */}
-      <div className={`rounded-3xl p-4 flex flex-col gap-3.5 ${cardCls}`}>
+      {/* Descripción y Categoría (Columna Derecha en PC) */}
+      <div className={`lg:col-span-6 rounded-3xl p-4 lg:p-6 flex flex-col gap-4 ${cardCls}`}>
         <div>
           <label className="font-display text-[12px] font-bold block mb-1.5" htmlFor="mov-desc">
             Descripción (opcional)
