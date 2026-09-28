@@ -1,16 +1,41 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { AlcanciaView } from './components/AlcanciaView';
 import { AnalyticsView } from './components/AnalyticsView';
 import { UserClayAvatar, WalletClayLogo } from './components/ClayAvatar';
 import { DashboardView } from './components/DashboardView';
+import {
+  FloatingNotificationToasts,
+  NotificationCenterDrawer,
+  playNotificationChime,
+  triggerNativeDeviceNotification,
+} from './components/NotificationCenter';
 import { OnboardingView } from './components/OnboardingView';
+import { PinLockScreen } from './components/PinLockScreen';
+import { PWAEntryPrompt, PWAInstallHeaderButton } from './components/PWAInstallPrompt';
 import { QuickAddView } from './components/QuickAddView';
+import { SubscriptionsDebtsView } from './components/SubscriptionsDebtsView';
 import { VaultSettingsView } from './components/VaultSettingsView';
-import { CURRENCIES, DEFAULT_USER_PROFILE, GENDER_DATA } from './constants/walletData';
-import { ActiveTab, Movement, UserProfile } from './types/wallet';
+import {
+  CURRENCIES,
+  DEFAULT_USER_PROFILE,
+  formatCurrencyAmount,
+  GENDER_DATA,
+} from './constants/walletData';
+import {
+  ActiveTab,
+  AppNotification,
+  Movement,
+  PaymentReminder,
+  SavingsGoal,
+  UserProfile,
+} from './types/wallet';
 
 const STORAGE_KEYS = {
   PROFILE: 'flickwallet_user_profile_v3',
   MOVEMENTS: 'flickwallet_movements_v3',
+  GOALS: 'flickwallet_savings_goals_v3',
+  REMINDERS: 'flickwallet_payment_reminders_v3',
+  NOTIFICATIONS: 'flickwallet_notifications_v3',
   HIDE_BALANCE: 'flickwallet_hide_balance_v3',
   DARK_MODE: 'flickwallet_dark_mode_v3',
   ONBOARDED: 'flickwallet_onboarding_completed_v3',
@@ -27,6 +52,8 @@ export default function App() {
           ...DEFAULT_USER_PROFILE,
           ...parsed,
           gender: gKey,
+          notificationsEnabled: parsed.notificationsEnabled !== false,
+          notificationSound: parsed.notificationSound !== false,
           monthlyIncome:
             typeof parsed.monthlyIncome === 'number'
               ? parsed.monthlyIncome
@@ -36,7 +63,11 @@ export default function App() {
     } catch {
       // ignore
     }
-    return DEFAULT_USER_PROFILE;
+    return {
+      ...DEFAULT_USER_PROFILE,
+      notificationsEnabled: true,
+      notificationSound: true,
+    };
   });
 
   const [movements, setMovements] = useState<Movement[]>(() => {
@@ -51,6 +82,48 @@ export default function App() {
     }
     return [];
   });
+
+  const [savingsGoals, setSavingsGoals] = useState<SavingsGoal[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.GOALS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  const [reminders, setReminders] = useState<PaymentReminder[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.REMINDERS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  const [notifications, setNotifications] = useState<AppNotification[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.NOTIFICATIONS);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed)) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+
+  const [liveToasts, setLiveToasts] = useState<AppNotification[]>([]);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   const [hideBalance, setHideBalance] = useState<boolean>(() => {
     try {
@@ -77,7 +150,21 @@ export default function App() {
     }
   });
 
+  const [isLocked, setIsLocked] = useState<boolean>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return Boolean(parsed.pinCode && String(parsed.pinCode).length === 4);
+      }
+    } catch {
+      // ignore
+    }
+    return false;
+  });
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const checkedDueOnStartupRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -97,6 +184,30 @@ export default function App() {
 
   useEffect(() => {
     try {
+      localStorage.setItem(STORAGE_KEYS.GOALS, JSON.stringify(savingsGoals));
+    } catch {
+      // ignore
+    }
+  }, [savingsGoals]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.REMINDERS, JSON.stringify(reminders));
+    } catch {
+      // ignore
+    }
+  }, [reminders]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.NOTIFICATIONS, JSON.stringify(notifications.slice(0, 30)));
+    } catch {
+      // ignore
+    }
+  }, [notifications]);
+
+  useEffect(() => {
+    try {
       localStorage.setItem(STORAGE_KEYS.HIDE_BALANCE, String(hideBalance));
     } catch {
       // ignore
@@ -111,8 +222,226 @@ export default function App() {
     }
   }, [isDark]);
 
+  const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
+
+  // Trigger both 3D Clay Toast + Chime + Native OS Notification
+  const handleTriggerNotification = useCallback(
+    (opts: {
+      title: string;
+      body: string;
+      emoji: string;
+      accent?: 'indigo' | 'mint' | 'rose' | 'amber';
+      actionTab?: ActiveTab;
+      actionLabel?: string;
+    }) => {
+      const created: AppNotification = {
+        id: `notif-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        title: opts.title,
+        body: opts.body,
+        emoji: opts.emoji,
+        accent: opts.accent || 'indigo',
+        createdAt: new Date().toISOString(),
+        read: false,
+        actionTab: opts.actionTab,
+        actionLabel: opts.actionLabel,
+      };
+
+      setNotifications((prev) => [created, ...prev].slice(0, 30));
+      setLiveToasts((prev) => [created, ...prev].slice(0, 3));
+
+      if (profile.notificationSound !== false) {
+        playNotificationChime(true);
+      }
+
+      if (profile.notificationsEnabled !== false) {
+        triggerNativeDeviceNotification(opts.title, opts.body);
+      }
+
+      setTimeout(() => {
+        setLiveToasts((prev) => prev.filter((t) => t.id !== created.id));
+      }, 4200);
+    },
+    [profile.notificationSound, profile.notificationsEnabled]
+  );
+
+  // Check pending reminders and alert user
+  const handleCheckPendingRemindersNotification = useCallback(() => {
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+    const todayDay = new Date().getDate();
+    const pending = reminders.filter((r) => !r.paidMonths.includes(currentMonthKey));
+
+    if (pending.length === 0) {
+      handleTriggerNotification({
+        title: '🎉 ¡Estás al día con tus pagos!',
+        body: 'No tienes suscripciones, arriendo, gym ni deudas pendientes por pagar en este momento.',
+        emoji: '✅',
+        accent: 'mint',
+        actionTab: 'pagos',
+        actionLabel: 'Ver calendario',
+      });
+      return;
+    }
+
+    const urgent = pending.find((r) => r.dayOfMonth - todayDay <= 3);
+    const target = urgent || pending[0];
+    const diff = target.dayOfMonth - todayDay;
+
+    handleTriggerNotification({
+      title:
+        diff < 0
+          ? `⚠️ Pago vencido: ${target.title}`
+          : diff === 0
+          ? `🔔 ¡Hoy vence ${target.title}!`
+          : `📅 Próximo pago: ${target.title} (Día ${target.dayOfMonth})`,
+      body: `Recuerda tu compromiso de ${curr.symbol}${formatCurrencyAmount(
+        target.amount,
+        curr.code
+      )} ${curr.code}. Tienes ${pending.length} ${
+        pending.length === 1 ? 'pago pendiente' : 'pagos pendientes'
+      } este mes.`,
+      emoji: target.emoji || '📅',
+      accent: diff < 0 ? 'rose' : diff <= 3 ? 'amber' : 'indigo',
+      actionTab: 'pagos',
+      actionLabel: 'Gestionar Pagos',
+    });
+  }, [reminders, curr.symbol, curr.code, handleTriggerNotification]);
+
+  // Automatic startup check for due/overdue reminders
+  useEffect(() => {
+    if (!onboardingCompleted || isLocked || checkedDueOnStartupRef.current) return;
+    checkedDueOnStartupRef.current = true;
+
+    if (profile.notificationsEnabled === false) return;
+
+    const currentMonthKey = new Date().toISOString().slice(0, 7);
+    const todayDay = new Date().getDate();
+    const dueSoon = reminders.filter(
+      (r) => !r.paidMonths.includes(currentMonthKey) && r.dayOfMonth - todayDay <= 3
+    );
+
+    if (dueSoon.length > 0) {
+      const first = dueSoon[0];
+      const diff = first.dayOfMonth - todayDay;
+      const timer = setTimeout(() => {
+        handleTriggerNotification({
+          title:
+            diff < 0
+              ? `⚠️ Pago pendiente: ${first.title}`
+              : diff === 0
+              ? `🔔 ¡Hoy vence ${first.title}!`
+              : `📅 ${first.title} vence en ${diff} días`,
+          body: `Monto: ${curr.symbol}${formatCurrencyAmount(first.amount, curr.code)} ${
+            curr.code
+          }. Toca para marcarlo como pagado.`,
+          emoji: first.emoji || '📅',
+          accent: diff < 0 ? 'rose' : 'amber',
+          actionTab: 'pagos',
+          actionLabel: 'Ver Pagos',
+        });
+      }, 1200);
+      return () => clearTimeout(timer);
+    }
+  }, [
+    onboardingCompleted,
+    isLocked,
+    reminders,
+    profile.notificationsEnabled,
+    curr.symbol,
+    curr.code,
+    handleTriggerNotification,
+  ]);
+
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
+  };
+
+  const handleAddGoal = (newGoal: Omit<SavingsGoal, 'id' | 'createdAt'>): SavingsGoal => {
+    const created: SavingsGoal = {
+      ...newGoal,
+      id: `goal-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    setSavingsGoals((prev) => [...prev, created]);
+    handleTriggerNotification({
+      title: `${created.emoji} ¡Alcancía "${created.name}" creada!`,
+      body: `Tu nueva meta es ahorrar ${curr.symbol}${formatCurrencyAmount(
+        created.targetAmount,
+        curr.code
+      )} ${curr.code}.`,
+      emoji: created.emoji,
+      accent: 'mint',
+      actionTab: 'alcancia',
+      actionLabel: 'Ver Alcancía',
+    });
+    return created;
+  };
+
+  const handleDepositToGoal = (goalId: string, amount: number) => {
+    const targetGoal = savingsGoals.find((g) => g.id === goalId);
+    setSavingsGoals((prev) =>
+      prev.map((g) => (g.id === goalId ? { ...g, savedAmount: g.savedAmount + amount } : g))
+    );
+    const entry: Movement = {
+      id: `mov-${Date.now()}`,
+      title: targetGoal ? `Abono a ${targetGoal.name}` : 'Abono a Alcancía',
+      amount,
+      type: 'alcancia',
+      category: 'alcancia',
+      goalId,
+      date: new Date().toISOString(),
+    };
+    setMovements((prev) => [entry, ...prev]);
+
+    if (targetGoal) {
+      const nextSaved = targetGoal.savedAmount + amount;
+      const reached = nextSaved >= targetGoal.targetAmount;
+      handleTriggerNotification({
+        title: reached
+          ? `🎉 ¡Meta lograda en "${targetGoal.name}"!`
+          : `🐷 Abono guardado en "${targetGoal.name}"`,
+        body: reached
+          ? `¡Felicidades! Completaste tu meta de ${curr.symbol}${formatCurrencyAmount(
+              targetGoal.targetAmount,
+              curr.code
+            )} ${curr.code}.`
+          : `Sumaste ${curr.symbol}${formatCurrencyAmount(amount, curr.code)} a tu alcancía.`,
+        emoji: reached ? '🏆' : targetGoal.emoji || '🐷',
+        accent: 'mint',
+      });
+    }
+  };
+
+  const handleDeleteGoal = (goalId: string) => {
+    setSavingsGoals((prev) => prev.filter((g) => g.id !== goalId));
+  };
+
+  const handleAddReminder = (rem: Omit<PaymentReminder, 'id' | 'paidMonths' | 'createdAt'>) => {
+    const created: PaymentReminder = {
+      ...rem,
+      id: `rem-${Date.now()}`,
+      paidMonths: [],
+      createdAt: new Date().toISOString(),
+    };
+    setReminders((prev) => [...prev, created]);
+  };
+
+  const handleTogglePaidReminder = (remId: string, monthKey: string) => {
+    setReminders((prev) =>
+      prev.map((r) => {
+        if (r.id !== remId) return r;
+        const alreadyPaid = r.paidMonths.includes(monthKey);
+        return {
+          ...r,
+          paidMonths: alreadyPaid
+            ? r.paidMonths.filter((m) => m !== monthKey)
+            : [...r.paidMonths, monthKey],
+        };
+      })
+    );
+  };
+
+  const handleDeleteReminder = (remId: string) => {
+    setReminders((prev) => prev.filter((r) => r.id !== remId));
   };
 
   const handleAddMovement = (newMov: Omit<Movement, 'id' | 'date'>) => {
@@ -122,13 +451,59 @@ export default function App() {
       date: new Date().toISOString(),
     };
     setMovements((prev) => [entry, ...prev]);
+
+    if (newMov.type === 'alcancia' && newMov.goalId) {
+      setSavingsGoals((prev) =>
+        prev.map((g) =>
+          g.id === newMov.goalId ? { ...g, savedAmount: g.savedAmount + newMov.amount } : g
+        )
+      );
+    }
   };
 
   const handleDeleteMovement = (id: string) => {
+    const target = movements.find((m) => m.id === id);
+    if (target && target.type === 'alcancia' && target.goalId) {
+      setSavingsGoals((prev) =>
+        prev.map((g) =>
+          g.id === target.goalId
+            ? { ...g, savedAmount: Math.max(0, g.savedAmount - target.amount) }
+            : g
+        )
+      );
+    }
     setMovements((prev) => prev.filter((m) => m.id !== id));
   };
 
-  const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
+  const handleResetAllApp = () => {
+    try {
+      Object.values(STORAGE_KEYS).forEach((k) => localStorage.removeItem(k));
+    } catch {
+      // ignore
+    }
+    setProfile(DEFAULT_USER_PROFILE);
+    setMovements([]);
+    setSavingsGoals([]);
+    setReminders([]);
+    setNotifications([]);
+    setIsLocked(false);
+    setOnboardingCompleted(false);
+    setActiveTab('dashboard');
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
+
+  // STEP 0: PIN Lock Screen if PIN is active
+  if (onboardingCompleted && isLocked && profile.pinCode) {
+    return (
+      <PinLockScreen
+        profile={profile}
+        isDark={isDark}
+        onUnlock={() => setIsLocked(false)}
+        onResetApp={handleResetAllApp}
+      />
+    );
+  }
 
   // STEP 1: Initial Registration & Questionnaire (only shown before completing onboarding)
   if (!onboardingCompleted) {
@@ -138,6 +513,7 @@ export default function App() {
           isDark ? 'dark bg-[#12161f] text-slate-100' : 'bg-[#f6fafe] text-[#171c1f]'
         }`}
       >
+        <PWAEntryPrompt isDark={isDark} />
         <OnboardingView
           profile={profile}
           onUpdateProfile={handleUpdateProfile}
@@ -156,11 +532,20 @@ export default function App() {
     );
   }
 
-  const desktopNavItems: { id: ActiveTab; label: string; icon: string; badge?: string }[] = [
+  const desktopNavItems: { id: ActiveTab; label: string; icon: string; badge?: number }[] = [
     { id: 'dashboard', label: 'Inicio', icon: 'space_dashboard' },
     { id: 'add', label: 'Registrar Movimiento', icon: 'add_circle' },
-    { id: 'analytics', label: 'Analíticas y Score', icon: 'donut_large' },
-    { id: 'vault', label: 'Ajustes y Perfil', icon: 'settings' },
+    { id: 'alcancia', label: 'Alcancía y Metas', icon: 'savings', badge: savingsGoals.length },
+    {
+      id: 'pagos',
+      label: 'Suscripciones y Deudas',
+      icon: 'event_repeat',
+      badge: reminders.filter(
+        (r) => !r.paidMonths.includes(new Date().toISOString().slice(0, 7))
+      ).length,
+    },
+    { id: 'analytics', label: 'Analíticas por Mes', icon: 'donut_large' },
+    { id: 'vault', label: 'Ajustes y Notificaciones', icon: 'settings' },
   ];
 
   // STEP 2: Main FlickWallet Application (Mobile + PC Responsive Layout)
@@ -170,6 +555,37 @@ export default function App() {
         isDark ? 'dark bg-[#12161f] text-slate-100' : 'bg-[#f6fafe] text-[#171c1f]'
       }`}
     >
+      {/* Native App Install Entry Prompt */}
+      <PWAEntryPrompt isDark={isDark} />
+
+      {/* Beautiful 3D Clay Floating Notification Toasts */}
+      <FloatingNotificationToasts
+        toasts={liveToasts}
+        isDark={isDark}
+        onDismiss={(id) => setLiveToasts((prev) => prev.filter((t) => t.id !== id))}
+        onAction={(id, tab) => {
+          setLiveToasts((prev) => prev.filter((t) => t.id !== id));
+          if (tab) setActiveTab(tab);
+        }}
+      />
+
+      {/* Notification Center History Drawer */}
+      <NotificationCenterDrawer
+        open={drawerOpen}
+        notifications={notifications}
+        isDark={isDark}
+        onClose={() => setDrawerOpen(false)}
+        onClearAll={() => setNotifications([])}
+        onSelectNotification={(n) => {
+          setNotifications((prev) =>
+            prev.map((item) => (item.id === n.id ? { ...item, read: true } : item))
+          );
+          setDrawerOpen(false);
+          if (n.actionTab) setActiveTab(n.actionTab);
+        }}
+        onOpenSettings={() => setActiveTab('vault')}
+      />
+
       {/* PC / Desktop Left Clay Sidebar Navigation */}
       <aside
         aria-label="Navegación de escritorio"
@@ -179,27 +595,64 @@ export default function App() {
             : 'bg-white/80 border-slate-200/70 shadow-[8px_0_30px_rgba(99,91,255,0.05)]'
         }`}
       >
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {/* Brand Header */}
-          <button
-            type="button"
-            onClick={() => setActiveTab('dashboard')}
-            className="flex items-center gap-3 text-left group active:scale-95 transition-transform"
-          >
-            <WalletClayLogo size="sm" />
-            <div>
-              <span className="font-display text-[20px] font-extrabold tracking-tight block leading-none">
-                FlickWallet
-              </span>
-              <span
-                className={`font-display text-[11px] font-semibold ${
-                  isDark ? 'text-slate-400' : 'text-[#464555]'
+          <div className="flex items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={() => setActiveTab('dashboard')}
+              className="flex items-center gap-3 text-left group active:scale-95 transition-transform"
+            >
+              <WalletClayLogo size="sm" />
+              <div>
+                <span className="font-display text-[20px] font-extrabold tracking-tight block leading-none">
+                  FlickWallet
+                </span>
+                <span
+                  className={`font-display text-[11px] font-semibold ${
+                    isDark ? 'text-slate-400' : 'text-[#464555]'
+                  }`}
+                >
+                  Billetera Personal Viva
+                </span>
+              </div>
+            </button>
+
+            <div className="flex items-center gap-1.5">
+              {/* Notification Bell Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  setDrawerOpen(true);
+                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                }}
+                title="Centro de notificaciones"
+                className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                  isDark ? 'bg-[#1b202c] text-[#62fae3]' : 'bg-[#f0f4f8] text-[#493ee5]'
                 }`}
               >
-                Billetera Personal Viva
-              </span>
+                <span className="material-symbols-outlined text-[18px]">notifications</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#e11d48] text-white font-display text-[9px] font-extrabold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
+              </button>
+
+              {profile.pinCode && (
+                <button
+                  type="button"
+                  onClick={() => setIsLocked(true)}
+                  title="Bloquear con PIN"
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                    isDark ? 'bg-[#1b202c] text-rose-300' : 'bg-[#ffdadc] text-[#400010]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">lock</span>
+                </button>
+              )}
             </div>
-          </button>
+          </div>
 
           {/* User Profile Card on Desktop Sidebar */}
           <button
@@ -252,7 +705,7 @@ export default function App() {
                   key={item.id}
                   type="button"
                   onClick={() => setActiveTab(item.id)}
-                  className={`w-full px-4 py-3 rounded-2xl font-display text-[13px] font-bold flex items-center gap-3 transition-all active:scale-98 ${
+                  className={`w-full px-4 py-2.5 rounded-2xl font-display text-[13px] font-bold flex items-center justify-between gap-2 transition-all active:scale-98 ${
                     active
                       ? isDark
                         ? 'bg-[#635bff]/25 text-[#c3c0ff] border border-[#635bff]/40 shadow-sm'
@@ -262,44 +715,31 @@ export default function App() {
                       : 'text-[#464555] hover:bg-[#f0f4f8] hover:text-[#171c1f]'
                   }`}
                 >
-                  <span
-                    className="material-symbols-outlined text-[20px]"
-                    style={{
-                      fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
-                    }}
-                  >
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className="material-symbols-outlined text-[20px]"
+                      style={{
+                        fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
+                      }}
+                    >
+                      {item.icon}
+                    </span>
+                    <span className="truncate">{item.label}</span>
+                  </div>
+                  {typeof item.badge === 'number' && item.badge > 0 && (
+                    <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-[#62fae3] text-[#00201c]">
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Bottom Theme Toggle on Desktop Sidebar */}
-        <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 flex items-center justify-between">
-          <span
-            className={`font-display text-[12px] font-bold ${
-              isDark ? 'text-slate-400' : 'text-[#464555]'
-            }`}
-          >
-            Apariencia
-          </span>
-          <button
-            type="button"
-            onClick={() => setIsDark((d) => !d)}
-            className={`px-3.5 py-2 rounded-2xl font-display text-[12px] font-bold flex items-center gap-1.5 transition-all active:scale-95 ${
-              isDark
-                ? 'bg-[#1b202c] text-amber-300 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.1)]'
-                : 'bg-[#f0f4f8] text-[#171c1f] shadow-[0_4px_10px_rgba(15,23,42,0.06),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">
-              {isDark ? 'light_mode' : 'dark_mode'}
-            </span>
-            <span>{isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
-          </button>
+        {/* Bottom Install Button on Desktop Sidebar */}
+        <div className="pt-4 border-t border-slate-200/60 dark:border-white/10 flex flex-col gap-2.5">
+          <PWAInstallHeaderButton isDark={isDark} />
         </div>
       </aside>
 
@@ -325,22 +765,43 @@ export default function App() {
               </span>
             </button>
 
-            <div className="flex items-center gap-2.5">
-              {/* Theme Toggle */}
+            <div className="flex items-center gap-1.5">
+              <PWAInstallHeaderButton isDark={isDark} />
+
+              {/* Notification Bell */}
               <button
                 type="button"
-                onClick={() => setIsDark((d) => !d)}
-                title={isDark ? 'Cambiar a Modo Claro' : 'Cambiar a Modo Oscuro'}
-                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                onClick={() => {
+                  setDrawerOpen(true);
+                  setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+                }}
+                title="Notificaciones"
+                className={`relative w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                   isDark
-                    ? 'bg-[#1b202c] text-amber-300 shadow-[inset_1px_1px_2px_rgba(255,255,255,0.1)]'
-                    : 'bg-white text-[#464555] shadow-[0_4px_10px_rgba(15,23,42,0.06),inset_1px_1px_2px_rgba(255,255,255,0.9)]'
+                    ? 'bg-[#1b202c] text-[#62fae3]'
+                    : 'bg-white text-[#493ee5] shadow-[0_4px_10px_rgba(15,23,42,0.06)]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">
-                  {isDark ? 'light_mode' : 'dark_mode'}
-                </span>
+                <span className="material-symbols-outlined text-[18px]">notifications</span>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#e11d48] text-white font-display text-[9px] font-extrabold flex items-center justify-center">
+                    {unreadCount}
+                  </span>
+                )}
               </button>
+
+              {profile.pinCode && (
+                <button
+                  type="button"
+                  onClick={() => setIsLocked(true)}
+                  title="Bloquear con PIN"
+                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                    isDark ? 'bg-[#1b202c] text-rose-300' : 'bg-[#ffdadc] text-[#400010]'
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-[18px]">lock</span>
+                </button>
+              )}
 
               {/* User Profile Photo Only */}
               <button
@@ -361,6 +822,8 @@ export default function App() {
             <DashboardView
               profile={profile}
               movements={movements}
+              savingsGoals={savingsGoals}
+              reminders={reminders}
               hideBalance={hideBalance}
               onToggleHideBalance={() => setHideBalance((h) => !h)}
               onUpdateProfile={handleUpdateProfile}
@@ -373,8 +836,37 @@ export default function App() {
           {activeTab === 'add' && (
             <QuickAddView
               profile={profile}
+              savingsGoals={savingsGoals}
+              onAddGoal={handleAddGoal}
               onAddMovement={handleAddMovement}
               onSuccessNavigate={() => setActiveTab('dashboard')}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'alcancia' && (
+            <AlcanciaView
+              profile={profile}
+              savingsGoals={savingsGoals}
+              onAddGoal={handleAddGoal}
+              onDepositToGoal={handleDepositToGoal}
+              onDeleteGoal={handleDeleteGoal}
+              hideBalance={hideBalance}
+              isDark={isDark}
+            />
+          )}
+
+          {activeTab === 'pagos' && (
+            <SubscriptionsDebtsView
+              profile={profile}
+              reminders={reminders}
+              onAddReminder={handleAddReminder}
+              onTogglePaidReminder={handleTogglePaidReminder}
+              onDeleteReminder={handleDeleteReminder}
+              onAddMovement={handleAddMovement}
+              onTriggerNotification={handleTriggerNotification}
+              onNavigate={setActiveTab}
+              hideBalance={hideBalance}
               isDark={isDark}
             />
           )}
@@ -386,7 +878,10 @@ export default function App() {
           {activeTab === 'vault' && (
             <VaultSettingsView
               profile={profile}
+              reminders={reminders}
               onUpdateProfile={handleUpdateProfile}
+              onLockNow={() => setIsLocked(true)}
+              onTriggerNotification={handleTriggerNotification}
               isDark={isDark}
               onToggleDark={() => setIsDark((d) => !d)}
             />
@@ -403,12 +898,12 @@ export default function App() {
             : 'bg-white/95 border-t border-slate-200/70 shadow-[0_-10px_30px_rgba(99,91,255,0.1)]'
         }`}
       >
-        <div className="max-w-md mx-auto px-4 h-16 flex items-center justify-around">
-          {/* 1. Dashboard Principal */}
+        <div className="max-w-md mx-auto px-2 h-16 grid grid-cols-6 items-center">
+          {/* 1. Inicio */}
           <button
             type="button"
             onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center justify-center py-1 px-3 transition-all active:scale-90 ${
+            className={`flex flex-col items-center justify-center py-1 transition-all active:scale-90 ${
               activeTab === 'dashboard'
                 ? 'text-[#493ee5] dark:text-[#c3c0ff]'
                 : isDark
@@ -417,37 +912,83 @@ export default function App() {
             }`}
           >
             <span
-              className="material-symbols-outlined text-[22px]"
+              className="material-symbols-outlined text-[21px]"
               style={{
                 fontVariationSettings: activeTab === 'dashboard' ? "'FILL' 1" : "'FILL' 0",
               }}
             >
               space_dashboard
             </span>
-            <span className="font-display text-[10px] font-bold mt-0.5">Inicio</span>
+            <span className="font-display text-[9px] font-bold mt-0.5">Inicio</span>
           </button>
 
-          {/* 2. Central Floating Quick Action "+" Button (Registro Rápido) */}
+          {/* 2. Botón de Alcancía */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('alcancia')}
+            className={`flex flex-col items-center justify-center py-1 transition-all active:scale-90 ${
+              activeTab === 'alcancia'
+                ? 'text-[#006b5f] dark:text-[#62fae3]'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200'
+                : 'text-[#777587] hover:text-[#171c1f]'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[21px]"
+              style={{
+                fontVariationSettings: activeTab === 'alcancia' ? "'FILL' 1" : "'FILL' 0",
+              }}
+            >
+              savings
+            </span>
+            <span className="font-display text-[9px] font-bold mt-0.5">Alcancía</span>
+          </button>
+
+          {/* 3. Botón Central "+" (Registro Rápido) */}
           <div className="flex items-center justify-center -mt-6">
             <button
               type="button"
               onClick={() => setActiveTab('add')}
               aria-label="Registro Rápido"
-              className={`w-14 h-14 rounded-full flex items-center justify-center text-white transition-all duration-150 active:translate-y-0.5 active:scale-95 ${
+              className={`w-13 h-13 rounded-full flex items-center justify-center text-white transition-all duration-150 active:translate-y-0.5 active:scale-95 ${
                 activeTab === 'add'
                   ? 'bg-[#006b5f] shadow-[0_12px_24px_rgba(0,107,95,0.45),inset_2px_3px_5px_rgba(255,255,255,0.65)]'
                   : 'bg-[#635bff] shadow-[0_14px_28px_-4px_rgba(99,91,255,0.55),inset_2px_3px_5px_rgba(255,255,255,0.75),inset_-2px_-3px_5px_rgba(15,0,105,0.4)]'
               }`}
             >
-              <span className="material-symbols-outlined text-[28px] font-bold">add</span>
+              <span className="material-symbols-outlined text-[26px] font-bold">add</span>
             </button>
           </div>
 
-          {/* 3. Estadísticas / Analíticas */}
+          {/* 4. Botón de Suscripciones, Arriendo, Gym y Deudas */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('pagos')}
+            className={`flex flex-col items-center justify-center py-1 transition-all active:scale-90 ${
+              activeTab === 'pagos'
+                ? 'text-[#493ee5] dark:text-[#c3c0ff]'
+                : isDark
+                ? 'text-slate-400 hover:text-slate-200'
+                : 'text-[#777587] hover:text-[#171c1f]'
+            }`}
+          >
+            <span
+              className="material-symbols-outlined text-[21px]"
+              style={{
+                fontVariationSettings: activeTab === 'pagos' ? "'FILL' 1" : "'FILL' 0",
+              }}
+            >
+              event_repeat
+            </span>
+            <span className="font-display text-[9px] font-bold mt-0.5">Pagos</span>
+          </button>
+
+          {/* 5. Analíticas (Con filtro de meses) */}
           <button
             type="button"
             onClick={() => setActiveTab('analytics')}
-            className={`flex flex-col items-center justify-center py-1 px-3 transition-all active:scale-90 ${
+            className={`flex flex-col items-center justify-center py-1 transition-all active:scale-90 ${
               activeTab === 'analytics'
                 ? 'text-[#493ee5] dark:text-[#c3c0ff]'
                 : isDark
@@ -456,21 +997,21 @@ export default function App() {
             }`}
           >
             <span
-              className="material-symbols-outlined text-[22px]"
+              className="material-symbols-outlined text-[21px]"
               style={{
                 fontVariationSettings: activeTab === 'analytics' ? "'FILL' 1" : "'FILL' 0",
               }}
             >
               donut_large
             </span>
-            <span className="font-display text-[10px] font-bold mt-0.5">Analíticas</span>
+            <span className="font-display text-[9px] font-bold mt-0.5">Analíticas</span>
           </button>
 
-          {/* 4. Ajustes / Perfil */}
+          {/* 6. Ajustes (Con notificaciones y PIN) */}
           <button
             type="button"
             onClick={() => setActiveTab('vault')}
-            className={`flex flex-col items-center justify-center py-1 px-3 transition-all active:scale-90 ${
+            className={`flex flex-col items-center justify-center py-1 transition-all active:scale-90 ${
               activeTab === 'vault'
                 ? 'text-[#493ee5] dark:text-[#c3c0ff]'
                 : isDark
@@ -479,14 +1020,14 @@ export default function App() {
             }`}
           >
             <span
-              className="material-symbols-outlined text-[22px]"
+              className="material-symbols-outlined text-[21px]"
               style={{
                 fontVariationSettings: activeTab === 'vault' ? "'FILL' 1" : "'FILL' 0",
               }}
             >
               settings
             </span>
-            <span className="font-display text-[10px] font-bold mt-0.5">Ajustes</span>
+            <span className="font-display text-[9px] font-bold mt-0.5">Ajustes</span>
           </button>
         </div>
       </nav>

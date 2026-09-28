@@ -1,0 +1,376 @@
+import React, { useState } from 'react';
+import {
+  CURRENCIES,
+  formatCurrencyAmount,
+  formatLiveNumberString,
+  parseTypedCurrencyInput,
+} from '../constants/walletData';
+import { SavingsGoal, UserProfile } from '../types/wallet';
+
+interface AlcanciaViewProps {
+  profile: UserProfile;
+  savingsGoals: SavingsGoal[];
+  onAddGoal: (goal: Omit<SavingsGoal, 'id' | 'createdAt'>) => SavingsGoal;
+  onDepositToGoal: (goalId: string, amount: number) => void;
+  onDeleteGoal: (goalId: string) => void;
+  hideBalance: boolean;
+  isDark: boolean;
+}
+
+const GOAL_EMOJIS = ['🐷', '✈️', '🏍️', '🏠', '💻', '🚗', '🎓', '💎', '📱', '🏖️'];
+
+export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
+  profile,
+  savingsGoals,
+  onAddGoal,
+  onDepositToGoal,
+  onDeleteGoal,
+  hideBalance,
+  isDark,
+}) => {
+  const [showCreateForm, setShowCreateForm] = useState(savingsGoals.length === 0);
+  const [goalName, setGoalName] = useState('');
+  const [goalTargetRaw, setGoalTargetRaw] = useState('');
+  const [goalEmoji, setGoalEmoji] = useState('🐷');
+
+  const [depositingGoalId, setDepositingGoalId] = useState<string | null>(null);
+  const [depositAmountRaw, setDepositAmountRaw] = useState('');
+
+  const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
+  const fmt = (val: number) => formatCurrencyAmount(val, curr.code);
+
+  const totalSavedAll = savingsGoals.reduce((acc, g) => acc + g.savedAmount, 0);
+  const totalTargetAll = savingsGoals.reduce((acc, g) => acc + g.targetAmount, 0);
+  const globalProgress =
+    totalTargetAll > 0 ? Math.min(100, Math.round((totalSavedAll / totalTargetAll) * 100)) : 0;
+
+  const handleCreateGoal = (e: React.FormEvent) => {
+    e.preventDefault();
+    const target = parseFloat(goalTargetRaw) || 0;
+    if (!goalName.trim() || target <= 0) return;
+
+    onAddGoal({
+      name: goalName.trim(),
+      targetAmount: target,
+      savedAmount: 0,
+      emoji: goalEmoji,
+    });
+    setGoalName('');
+    setGoalTargetRaw('');
+    setGoalEmoji('🐷');
+    setShowCreateForm(false);
+  };
+
+  const handleDepositSubmit = (e: React.FormEvent, goalId: string) => {
+    e.preventDefault();
+    const amt = parseFloat(depositAmountRaw) || 0;
+    if (amt <= 0) return;
+    onDepositToGoal(goalId, amt);
+    setDepositAmountRaw('');
+    setDepositingGoalId(null);
+  };
+
+  const cardCls = isDark
+    ? 'bg-[#1b202c] text-slate-100 shadow-[0_14px_28px_-6px_rgba(0,0,0,0.45),inset_2px_2px_4px_rgba(255,255,255,0.06)]'
+    : 'bg-white text-[#171c1f] shadow-[0_12px_26px_-6px_rgba(99,91,255,0.09),0_4px_10px_-2px_rgba(15,23,42,0.04),inset_3px_3px_6px_rgba(255,255,255,0.9),inset_-3px_-3px_6px_rgba(15,23,42,0.03)]';
+
+  const inputWell = isDark
+    ? 'bg-[#12161f] text-slate-100 placeholder:text-slate-500 shadow-[inset_2px_2px_5px_rgba(0,0,0,0.55)]'
+    : 'bg-[#f0f4f8] text-[#171c1f] placeholder:text-[#777587] shadow-[inset_2px_2px_5px_rgba(15,23,42,0.08),inset_-2px_-2px_5px_rgba(255,255,255,0.9)]';
+
+  return (
+    <div className="flex flex-col gap-5 pb-8">
+      {/* Encabezado 3D de Alcancías y Metas */}
+      <div className="rounded-3xl p-6 bg-gradient-to-br from-[#006b5f] via-[#0d9488] to-[#115e59] text-white shadow-[0_20px_36px_-8px_rgba(13,148,136,0.42),inset_3px_4px_7px_rgba(255,255,255,0.35),inset_-4px_-4px_8px_rgba(0,40,35,0.4)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-15 h-15 rounded-3xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-3xl shadow-[inset_2px_2px_4px_rgba(255,255,255,0.6)] shrink-0">
+            🐷
+          </div>
+          <div>
+            <span className="font-display text-[11px] font-extrabold uppercase tracking-wider text-[#62fae3]">
+              Alcancías 3D · Metas de Ahorro
+            </span>
+            <h2 className="font-display text-[24px] font-extrabold leading-tight">
+              {hideBalance ? `${curr.symbol} •••••••` : `${curr.symbol}${fmt(totalSavedAll)}`}{' '}
+              <span className="text-[13px] font-bold text-[#62fae3]">{curr.code} ahorrados</span>
+            </h2>
+            <p className="text-[12px] text-white/85 mt-0.5">
+              {savingsGoals.length === 0
+                ? 'Crea tu primera meta definiendo el nombre y el monto objetivo'
+                : `${savingsGoals.length} ${
+                    savingsGoals.length === 1 ? 'alcancía activa' : 'alcancías activas'
+                  } · ${globalProgress}% de tu meta global`}
+            </p>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => setShowCreateForm((v) => !v)}
+          className="px-4 py-3 rounded-2xl bg-[#62fae3] text-[#00201c] font-display text-[13px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_10px_20px_rgba(0,0,0,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-transform shrink-0"
+        >
+          <span className="material-symbols-outlined text-[18px]">
+            {showCreateForm ? 'close' : 'add'}
+          </span>
+          <span>{showCreateForm ? 'Cerrar formulario' : 'Nueva Meta de Ahorro'}</span>
+        </button>
+      </div>
+
+      {/* Formulario Paso Previo: Preguntar Nombre y Meta antes de crear la Alcancía */}
+      {showCreateForm && (
+        <form
+          onSubmit={handleCreateGoal}
+          className={`rounded-3xl p-5 lg:p-6 flex flex-col gap-4 border-2 ${
+            isDark ? 'border-[#62fae3]/40' : 'border-[#006b5f]/30'
+          } ${cardCls}`}
+        >
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3]">
+                Paso 1 · Configura tu Alcancía
+              </span>
+              <h3 className="font-display text-[18px] font-extrabold">
+                ¿Para qué quieres ahorrar y cuál es tu meta?
+              </h3>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Pregunta 1: Nombre de la meta */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-display text-[12px] font-bold" htmlFor="alcancia-goal-name">
+                1. Nombre de tu meta de ahorro
+              </label>
+              <input
+                id="alcancia-goal-name"
+                type="text"
+                required
+                value={goalName}
+                onChange={(e) => setGoalName(e.target.value)}
+                placeholder="Ej. Viaje, Moto nueva, Fondo de emergencia..."
+                className={`w-full h-12 px-4 rounded-2xl font-display text-[14px] font-bold focus:outline-none ${inputWell}`}
+              />
+            </div>
+
+            {/* Pregunta 2: Meta de ahorro numérica */}
+            <div className="flex flex-col gap-1.5">
+              <label className="font-display text-[12px] font-bold" htmlFor="alcancia-goal-target">
+                2. Meta total a alcanzar ({curr.code})
+              </label>
+              <div className="relative">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-[15px] font-bold text-slate-400">
+                  {curr.symbol}
+                </span>
+                <input
+                  id="alcancia-goal-target"
+                  type="text"
+                  inputMode="decimal"
+                  required
+                  value={formatLiveNumberString(goalTargetRaw, curr.code)}
+                  onChange={(e) =>
+                    setGoalTargetRaw(parseTypedCurrencyInput(e.target.value, curr.code))
+                  }
+                  placeholder="0"
+                  className={`w-full h-12 pl-10 pr-4 rounded-2xl font-display text-[16px] font-extrabold tabular-nums focus:outline-none ${inputWell}`}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Selector de Icono */}
+          <div className="flex flex-col gap-1.5">
+            <span className="font-display text-[12px] font-bold">
+              3. Elige un icono para tu alcancía
+            </span>
+            <div className="flex items-center gap-2 flex-wrap">
+              {GOAL_EMOJIS.map((em) => (
+                <button
+                  key={em}
+                  type="button"
+                  onClick={() => setGoalEmoji(em)}
+                  className={`w-11 h-11 rounded-2xl text-xl flex items-center justify-center transition-all active:scale-90 ${
+                    goalEmoji === em
+                      ? 'bg-[#635bff] text-white shadow-[0_6px_14px_rgba(99,91,255,0.4)] scale-105'
+                      : isDark
+                      ? 'bg-[#12161f]'
+                      : 'bg-[#f0f4f8]'
+                  }`}
+                >
+                  {em}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            className="w-full py-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[14px] font-extrabold shadow-[0_12px_24px_-4px_rgba(99,91,255,0.45),inset_2px_2px_4px_rgba(255,255,255,0.6)] active:scale-98 transition-all"
+          >
+            Crear Alcancía 🐷
+          </button>
+        </form>
+      )}
+
+      {/* Listado de Alcancías Activas */}
+      {savingsGoals.length === 0 ? (
+        <div className={`rounded-3xl p-10 text-center flex flex-col items-center gap-3 ${cardCls}`}>
+          <div className="w-16 h-16 rounded-3xl bg-[#62fae3]/30 flex items-center justify-center text-4xl">
+            🐷
+          </div>
+          <h3 className="font-display text-[18px] font-extrabold">
+            Aún no tienes alcancías creadas
+          </h3>
+          <p className={`text-[13px] max-w-md ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
+            Escribe arriba el <strong>nombre de tu meta</strong> y el <strong>monto objetivo</strong>{' '}
+            para empezar a meter dinero en tu alcancía y ver cómo sube tu barra de progreso.
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {savingsGoals.map((goal) => {
+            const pct =
+              goal.targetAmount > 0
+                ? Math.min(100, Math.round((goal.savedAmount / goal.targetAmount) * 100))
+                : 0;
+            const remaining = Math.max(0, goal.targetAmount - goal.savedAmount);
+            const isCompleted = pct >= 100;
+            const isDepositing = depositingGoalId === goal.id;
+
+            return (
+              <div
+                key={goal.id}
+                className={`rounded-3xl p-5 flex flex-col justify-between gap-4 border transition-all ${
+                  isCompleted
+                    ? 'border-[#10b981]/50'
+                    : isDark
+                    ? 'border-white/5'
+                    : 'border-slate-200/60'
+                } ${cardCls}`}
+              >
+                <div className="flex flex-col gap-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex items-center gap-3.5 min-w-0">
+                      <div className="w-13 h-13 rounded-2xl bg-[#62fae3]/30 text-[#00201c] flex items-center justify-center text-2xl shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
+                        {goal.emoji || '🐷'}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2">
+                          <h4 className="font-display text-[17px] font-extrabold truncate">
+                            {goal.name}
+                          </h4>
+                          {isCompleted && (
+                            <span className="px-2.5 py-0.5 rounded-full bg-[#62fae3] text-[#00201c] font-display text-[10px] font-extrabold">
+                              ¡Meta Lograda! 🎉
+                            </span>
+                          )}
+                        </div>
+                        <span
+                          className={`text-[12px] block font-display font-bold tabular-nums ${
+                            isDark ? 'text-slate-300' : 'text-[#464555]'
+                          }`}
+                        >
+                          {hideBalance
+                            ? `${curr.symbol} •••• / ${curr.symbol} ••••`
+                            : `${curr.symbol}${fmt(goal.savedAmount)} de ${curr.symbol}${fmt(
+                                goal.targetAmount
+                              )} ${curr.code}`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDepositingGoalId(isDepositing ? null : goal.id);
+                          setDepositAmountRaw('');
+                        }}
+                        className="px-3.5 py-2 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-bold flex items-center gap-1 shadow-[0_6px_14px_rgba(99,91,255,0.35),inset_1px_1px_2px_rgba(255,255,255,0.6)] active:scale-95 transition-transform"
+                      >
+                        <span className="material-symbols-outlined text-[15px]">savings</span>
+                        <span>+ Meter dinero</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onDeleteGoal(goal.id)}
+                        title="Eliminar alcancía"
+                        className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-[18px]">delete</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Barra de progreso 3D */}
+                  <div className="flex flex-col gap-1.5">
+                    <div className="w-full h-3.5 rounded-full bg-black/10 dark:bg-black/40 p-0.5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#635bff] via-[#2dd4bf] to-[#62fae3] transition-all duration-300"
+                        style={{ width: `${goal.savedAmount > 0 ? Math.max(5, pct) : 0}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] font-display font-bold">
+                      <span className="text-[#006b5f] dark:text-[#62fae3] tabular-nums">
+                        {pct}% completado
+                      </span>
+                      <span className={isDark ? 'text-slate-400' : 'text-[#464555]'}>
+                        {remaining === 0
+                          ? '¡Meta superada!'
+                          : `Faltan ${
+                              hideBalance ? `${curr.symbol} •••` : `${curr.symbol}${fmt(remaining)}`
+                            }`}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Panel desplegable para añadir dinero a esta alcancía */}
+                {isDepositing && (
+                  <form
+                    onSubmit={(e) => handleDepositSubmit(e, goal.id)}
+                    className={`p-3.5 rounded-2xl flex flex-col gap-2.5 border ${
+                      isDark
+                        ? 'bg-[#12161f] border-[#635bff]/40'
+                        : 'bg-[#f0f4f8] border-[#635bff]/30'
+                    }`}
+                  >
+                    <label className="font-display text-[11px] font-extrabold uppercase tracking-wider text-[#635bff] dark:text-[#c3c0ff]">
+                      ¿Cuánto quieres abonar hoy a &ldquo;{goal.name}&rdquo;?
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-display text-[14px] font-bold text-slate-400">
+                          {curr.symbol}
+                        </span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoFocus
+                          value={formatLiveNumberString(depositAmountRaw, curr.code)}
+                          onChange={(e) =>
+                            setDepositAmountRaw(parseTypedCurrencyInput(e.target.value, curr.code))
+                          }
+                          placeholder="Monto a guardar..."
+                          className={`w-full h-11 pl-9 pr-3 rounded-xl font-display text-[15px] font-extrabold tabular-nums focus:outline-none ${
+                            isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                          }`}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="h-11 px-4 rounded-xl bg-[#006b5f] text-white font-display text-[12px] font-extrabold shadow-sm active:scale-95 transition-transform"
+                      >
+                        Guardar Abono
+                      </button>
+                    </div>
+                  </form>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+};

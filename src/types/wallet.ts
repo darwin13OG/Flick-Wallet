@@ -2,7 +2,7 @@ export type GenderKey = 'hombre' | 'mujer' | 'otro';
 
 export type CurrencyCode = 'USD' | 'COP' | 'MXN' | 'EUR' | 'ARS' | 'PEN' | 'CLP' | 'GBP';
 
-export type MovementType = 'hormiga' | 'fijo' | 'ingreso';
+export type MovementType = 'hormiga' | 'fijo' | 'ingreso' | 'alcancia';
 
 export type CategoryId =
   | 'cafe'
@@ -16,6 +16,7 @@ export type CategoryId =
   | 'salud'
   | 'sueldo'
   | 'freelance'
+  | 'alcancia'
   | 'otros';
 
 export interface CategoryMeta {
@@ -38,6 +39,41 @@ export interface Movement {
   type: MovementType;
   category: CategoryId;
   date: string;
+  goalId?: string;
+}
+
+export interface SavingsGoal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  savedAmount: number;
+  emoji: string;
+  createdAt: string;
+}
+
+export type ReminderKind = 'arriendo' | 'gym' | 'suscripcion' | 'deuda' | 'pago_mes';
+
+export interface PaymentReminder {
+  id: string;
+  title: string;
+  amount: number;
+  dayOfMonth: number;
+  kind: ReminderKind;
+  emoji?: string;
+  paidMonths: string[];
+  createdAt: string;
+}
+
+export interface AppNotification {
+  id: string;
+  title: string;
+  body: string;
+  emoji: string;
+  accent: 'indigo' | 'mint' | 'rose' | 'amber';
+  createdAt: string;
+  read: boolean;
+  actionTab?: ActiveTab;
+  actionLabel?: string;
 }
 
 export interface UserProfile {
@@ -49,8 +85,18 @@ export interface UserProfile {
   useCustomAvatar?: boolean;
   monthlyIncome: number;
   hormigaLimit?: number;
+  pinCode?: string;
+  notificationsEnabled?: boolean;
+  notificationSound?: boolean;
   goals: string[];
   configuredAt: string;
 }
 
-export type ActiveTab = 'dashboard' | 'analytics' | 'add' | 'onboarding' | 'vault';
+export type ActiveTab =
+  | 'dashboard'
+  | 'add'
+  | 'alcancia'
+  | 'pagos'
+  | 'analytics'
+  | 'vault'
+  | 'onboarding';

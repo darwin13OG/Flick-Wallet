@@ -6,10 +6,18 @@ import {
   formatLiveNumberString,
   parseTypedCurrencyInput,
 } from '../constants/walletData';
-import { CategoryId, Movement, MovementType, UserProfile } from '../types/wallet';
+import {
+  CategoryId,
+  Movement,
+  MovementType,
+  SavingsGoal,
+  UserProfile,
+} from '../types/wallet';
 
 interface QuickAddViewProps {
   profile: UserProfile;
+  savingsGoals: SavingsGoal[];
+  onAddGoal: (goal: Omit<SavingsGoal, 'id' | 'createdAt'>) => SavingsGoal;
   onAddMovement: (mov: Omit<Movement, 'id' | 'date'>) => void;
   onSuccessNavigate: () => void;
   isDark: boolean;
@@ -33,10 +41,16 @@ const QUICK_SUGGESTIONS: Record<
     { title: 'Sueldo / Quincena', amount: '2000', cat: 'sueldo' },
     { title: 'Ingreso Extra', amount: '350', cat: 'freelance' },
   ],
+  alcancia: [
+    { title: 'Abono a mi Alcancía', amount: '50', cat: 'alcancia' },
+    { title: 'Ahorro Quincenal', amount: '150', cat: 'alcancia' },
+  ],
 };
 
 export const QuickAddView: React.FC<QuickAddViewProps> = ({
   profile,
+  savingsGoals,
+  onAddGoal,
   onAddMovement,
   onSuccessNavigate,
   isDark,
@@ -45,6 +59,12 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
   const [amountRaw, setAmountRaw] = useState('');
   const [title, setTitle] = useState('');
   const [category, setCategory] = useState<CategoryId>('cafe');
+  const [selectedGoalId, setSelectedGoalId] = useState<string>(savingsGoals[0]?.id || '');
+
+  // Inline creation of Alcancía if user chooses "Alcancía" and has none (or wants a new one)
+  const [creatingGoal, setCreatingGoal] = useState<boolean>(false);
+  const [newGoalName, setNewGoalName] = useState('');
+  const [newGoalTargetRaw, setNewGoalTargetRaw] = useState('');
   const [savedFeedback, setSavedFeedback] = useState(false);
 
   const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
@@ -59,7 +79,13 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     setMovType(t);
     if (t === 'hormiga') setCategory('cafe');
     else if (t === 'fijo') setCategory('vivienda');
-    else setCategory('sueldo');
+    else if (t === 'ingreso') setCategory('sueldo');
+    else {
+      setCategory('alcancia');
+      if (savingsGoals.length > 0 && !selectedGoalId) {
+        setSelectedGoalId(savingsGoals[0].id);
+      }
+    }
   };
 
   const handleKeyPress = (key: string) => {
@@ -88,18 +114,58 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     });
   };
 
+  const handleCreateGoalInline = () => {
+    const target = parseFloat(newGoalTargetRaw) || 0;
+    if (!newGoalName.trim() || target <= 0) return;
+    const created = onAddGoal({
+      name: newGoalName.trim(),
+      targetAmount: target,
+      savedAmount: 0,
+      emoji: '🐷',
+    });
+    setSelectedGoalId(created.id);
+    setNewGoalName('');
+    setNewGoalTargetRaw('');
+    setCreatingGoal(false);
+  };
+
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (numericAmount <= 0) return;
 
+    let targetGoalId = selectedGoalId || savingsGoals[0]?.id;
+
+    // If user is in 'alcancia' mode and hasn't created a goal yet, create it first if fields are filled
+    if (movType === 'alcancia' && !targetGoalId) {
+      const target = parseFloat(newGoalTargetRaw) || 0;
+      if (!newGoalName.trim() || target <= 0) {
+        return;
+      }
+      const created = onAddGoal({
+        name: newGoalName.trim(),
+        targetAmount: target,
+        savedAmount: 0,
+        emoji: '🐷',
+      });
+      targetGoalId = created.id;
+    }
+
     const catMeta = CATEGORIES[category] || CATEGORIES.otros;
-    const finalTitle = title.trim() || catMeta.name;
+    const goalObj = savingsGoals.find((g) => g.id === targetGoalId);
+    const finalTitle =
+      title.trim() ||
+      (movType === 'alcancia' && goalObj
+        ? `Abono a ${goalObj.name}`
+        : movType === 'alcancia' && newGoalName.trim()
+        ? `Abono a ${newGoalName.trim()}`
+        : catMeta.name);
 
     onAddMovement({
       title: finalTitle,
       amount: numericAmount,
       type: movType,
-      category,
+      category: movType === 'alcancia' ? 'alcancia' : category,
+      goalId: movType === 'alcancia' ? targetGoalId : undefined,
     });
 
     setSavedFeedback(true);
@@ -117,6 +183,8 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     ? 'bg-[#242b3a] text-white shadow-[0_5px_10px_rgba(0,0,0,0.35),inset_1px_2px_3px_rgba(255,255,255,0.08)] active:translate-y-0.5 active:scale-95'
     : 'bg-[#ffffff] text-[#171c1f] shadow-[0_6px_14px_-4px_rgba(15,23,42,0.08),inset_2px_2px_4px_rgba(255,255,255,0.95),inset_-2px_-2px_4px_rgba(15,23,42,0.04)] active:translate-y-0.5 active:scale-95';
 
+  const needsGoalSetup = movType === 'alcancia' && (savingsGoals.length === 0 || creatingGoal);
+
   return (
     <form
       onSubmit={handleSave}
@@ -124,12 +192,12 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     >
       {/* BLOQUE SUPERIOR / COLUMNA IZQUIERDA EN PC: Tipo + Visor de Monto + Teclado (Visible sin bajar) */}
       <div className={`lg:col-span-6 rounded-3xl p-4 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
-        {/* 1. Selector de Tipo de Movimiento */}
-        <div className="grid grid-cols-3 gap-2">
+        {/* 1. Selector de Tipo de Movimiento (Incluye Añadir dinero en Alcancía) */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             {
               id: 'hormiga' as MovementType,
-              label: 'Gasto Hormiga',
+              label: 'Hormiga',
               emoji: '🐜',
               activeCls:
                 'border-[#a42f46] bg-[#ffdadc]/60 text-[#400010] dark:bg-rose-500/25 dark:text-rose-200',
@@ -147,6 +215,13 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
               emoji: '💰',
               activeCls:
                 'border-[#006b5f] bg-[#62fae3]/60 text-[#00201c] dark:bg-emerald-500/25 dark:text-emerald-200',
+            },
+            {
+              id: 'alcancia' as MovementType,
+              label: 'En Alcancía',
+              emoji: '🐷',
+              activeCls:
+                'border-[#635bff] bg-[#e2dfff]/80 text-[#321ed2] dark:bg-[#635bff]/30 dark:text-indigo-100',
             },
           ].map((item) => {
             const active = movType === item.id;
@@ -172,6 +247,113 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           })}
         </div>
 
+        {/* Selector o Creación de Meta antes de meter dinero en Alcancía */}
+        {movType === 'alcancia' && (
+          <div
+            className={`p-3.5 rounded-2xl flex flex-col gap-2.5 border ${
+              isDark
+                ? 'bg-[#12161f] border-[#635bff]/40'
+                : 'bg-[#f0f4f8] border-[#635bff]/30'
+            }`}
+          >
+            {!needsGoalSetup ? (
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-display text-[11px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff]">
+                    Selecciona a qué Alcancía abonar:
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setCreatingGoal(true)}
+                    className="font-display text-[11px] font-bold text-[#006b5f] dark:text-[#62fae3] hover:underline"
+                  >
+                    + Crear otra meta
+                  </button>
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {savingsGoals.map((g) => {
+                    const active = (selectedGoalId || savingsGoals[0]?.id) === g.id;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        onClick={() => setSelectedGoalId(g.id)}
+                        className={`px-3 py-1.5 rounded-xl font-display text-[11px] font-bold flex items-center gap-1.5 transition-all ${
+                          active
+                            ? 'bg-[#635bff] text-white shadow-xs'
+                            : isDark
+                            ? 'bg-[#1b202c] text-slate-300'
+                            : 'bg-white text-[#171c1f]'
+                        }`}
+                      >
+                        <span>{g.emoji}</span>
+                        <span>{g.name}</span>
+                        <span className="opacity-75">
+                          ({curr.symbol}
+                          {formatCurrencyAmount(g.savedAmount, curr.code)} / {curr.symbol}
+                          {formatCurrencyAmount(g.targetAmount, curr.code)})
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                <div className="flex items-center justify-between">
+                  <span className="font-display text-[12px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff]">
+                    Primero define el Nombre y la Meta de tu Alcancía:
+                  </span>
+                  {savingsGoals.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setCreatingGoal(false)}
+                      className="text-[11px] font-bold text-slate-400"
+                    >
+                      Cancelar
+                    </button>
+                  )}
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    value={newGoalName}
+                    onChange={(e) => setNewGoalName(e.target.value)}
+                    placeholder="1. Nombre (Ej. Viaje, Moto...)"
+                    className={`h-10 px-3 rounded-xl text-[12px] font-medium focus:outline-none ${
+                      isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                    }`}
+                  />
+                  <div className="relative">
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2 font-display text-[12px] font-bold text-slate-400">
+                      {curr.symbol}
+                    </span>
+                    <input
+                      type="text"
+                      inputMode="decimal"
+                      value={formatLiveNumberString(newGoalTargetRaw, curr.code)}
+                      onChange={(e) =>
+                        setNewGoalTargetRaw(parseTypedCurrencyInput(e.target.value, curr.code))
+                      }
+                      placeholder="2. Meta total"
+                      className={`w-full h-10 pl-7 pr-3 rounded-xl font-display text-[12px] font-bold tabular-nums focus:outline-none ${
+                        isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                      }`}
+                    />
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCreateGoalInline}
+                  className="py-2 rounded-xl bg-[#635bff] text-white font-display text-[11px] font-bold"
+                >
+                  Confirmar Meta de Ahorro
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* 2. Visor de Monto en Vivo (También permite escribir directamente y ver los números) */}
         <div
           className={`w-full py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative ${
@@ -181,7 +363,11 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           }`}
         >
           <div className="w-full flex items-center justify-between text-[10px] font-display font-bold uppercase tracking-wider text-slate-400">
-            <span>Monto en {curr.code}</span>
+            <span>
+              {movType === 'alcancia'
+                ? `Monto a guardar en Alcancía (${curr.code})`
+                : `Monto en ${curr.code}`}
+            </span>
             {amountRaw && (
               <button
                 type="button"
@@ -223,6 +409,8 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           <div className="text-[11px] text-center text-slate-400">
             {movType === 'hormiga'
               ? `5 veces/semana = ${curr.symbol}${formatCurrencyAmount(numericAmount * 5 * 52, curr.code)} ${curr.code}/año`
+              : movType === 'alcancia'
+              ? 'Este dinero se sumará directamente a tu meta de ahorro'
               : monthlyIncome > 0
               ? `Representa el ${impactPercent}% de tu ingreso mensual`
               : `Moneda activa: ${curr.name}`}
@@ -263,9 +451,15 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           }`}
         >
           <span className="material-symbols-outlined text-[20px]">
-            {savedFeedback ? 'check_circle' : 'add_task'}
+            {savedFeedback ? 'check_circle' : movType === 'alcancia' ? 'savings' : 'add_task'}
           </span>
-          <span>{savedFeedback ? '¡Guardado en tu Billetera!' : 'Guardar Movimiento'}</span>
+          <span>
+            {savedFeedback
+              ? '¡Guardado en tu Billetera!'
+              : movType === 'alcancia'
+              ? 'Añadir Dinero en Alcancía'
+              : 'Guardar Movimiento'}
+          </span>
         </button>
       </div>
 
@@ -280,7 +474,11 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Ej. Café frío, Netflix, Sueldo..."
+            placeholder={
+              movType === 'alcancia'
+                ? 'Ej. Ahorro de la quincena...'
+                : 'Ej. Café frío, Netflix, Sueldo...'
+            }
             className={`w-full h-11 px-4 rounded-2xl text-[14px] focus:outline-none ${
               isDark
                 ? 'bg-[#12161f] text-slate-100 placeholder:text-slate-500 shadow-[inset_2px_2px_4px_rgba(0,0,0,0.5)]'

@@ -387,6 +387,18 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     textDark: 'text-teal-300',
     colorHex: '#14b8a6',
   },
+  alcancia: {
+    id: 'alcancia',
+    name: 'Alcancía de Ahorro',
+    icon: 'savings',
+    emoji: '🐷',
+    defaultType: 'alcancia',
+    bgLight: 'bg-[#e2dfff]',
+    textLight: 'text-[#321ed2]',
+    bgDark: 'bg-indigo-500/25',
+    textDark: 'text-indigo-200',
+    colorHex: '#635bff',
+  },
   otros: {
     id: 'otros',
     name: 'Otros',
