@@ -77,6 +77,8 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         income += m.amount;
       } else if (m.type === 'alcancia') {
         alcanciaSaved += m.amount;
+      } else if (m.type === 'retiro_alcancia') {
+        alcanciaSaved = Math.max(0, alcanciaSaved - m.amount);
       } else {
         if (m.type === 'fijo') fixed += m.amount;
         if (m.type === 'hormiga') hormiga += m.amount;

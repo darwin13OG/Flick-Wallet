@@ -1,12 +1,49 @@
-const CACHE_NAME = 'flickwallet-cache-v2';
+const CACHE_NAME = 'flickwallet-cache-v3';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/icon.svg',
   '/pwa-192x192.png',
-  '/pwa-512x512.png'
+  '/pwa-512x512.png',
+  '/notification-badge.png'
 ];
+
+let reminderTimeoutId = null;
+let lastNotifiedDateKey = null;
+
+function scheduleNext9pmInSW(enabled, customBody) {
+  if (reminderTimeoutId) {
+    clearTimeout(reminderTimeoutId);
+    reminderTimeoutId = null;
+  }
+  if (!enabled) return;
+
+  const now = new Date();
+  const target = new Date(now);
+  target.setHours(21, 0, 0, 0);
+
+  if (now.getTime() >= target.getTime()) {
+    target.setDate(target.getDate() + 1);
+  }
+
+  const msUntil9pm = target.getTime() - now.getTime();
+  reminderTimeoutId = setTimeout(() => {
+    const todayKey = new Date().toISOString().slice(0, 10);
+    if (lastNotifiedDateKey !== todayKey && self.registration && self.registration.showNotification) {
+      lastNotifiedDateKey = todayKey;
+      self.registration.showNotification('Recordatorio 9:00 PM · FlickWallet', {
+        body:
+          customBody ||
+          '¿Tuviste algún gasto hormiga, ingreso o abono hoy? Regístralo antes de cerrar el día.',
+        icon: '/pwa-192x192.png',
+        badge: '/notification-badge.png',
+        tag: `flickwallet-9pm-${todayKey}`,
+      });
+    }
+    scheduleNext9pmInSW(true, customBody);
+  }, msUntil9pm);
+}
 
 self.addEventListener('install', (event) => {
   self.skipWaiting();
@@ -17,10 +54,23 @@ self.addEventListener('install', (event) => {
 
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())))
-    ).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((keys) =>
+        Promise.all(keys.map((k) => (k !== CACHE_NAME ? caches.delete(k) : Promise.resolve())))
+      )
+      .then(() => self.clients.claim())
   );
+});
+
+self.addEventListener('message', (event) => {
+  if (!event.data || typeof event.data !== 'object') return;
+  if (event.data.type === 'SCHEDULE_9PM_REMINDER') {
+    if (event.data.alreadyNotifiedDate) {
+      lastNotifiedDateKey = event.data.alreadyNotifiedDate;
+    }
+    scheduleNext9pmInSW(Boolean(event.data.enabled), event.data.body);
+  }
 });
 
 self.addEventListener('fetch', (event) => {

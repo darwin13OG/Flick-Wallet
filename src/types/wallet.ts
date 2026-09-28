@@ -2,7 +2,7 @@ export type GenderKey = 'hombre' | 'mujer' | 'otro';
 
 export type CurrencyCode = 'USD' | 'COP' | 'MXN' | 'EUR' | 'ARS' | 'PEN' | 'CLP' | 'GBP';
 
-export type MovementType = 'hormiga' | 'fijo' | 'ingreso' | 'alcancia';
+export type MovementType = 'hormiga' | 'fijo' | 'ingreso' | 'alcancia' | 'retiro_alcancia';
 
 export type CategoryId =
   | 'cafe'
@@ -61,6 +61,8 @@ export interface PaymentReminder {
   kind: ReminderKind;
   emoji?: string;
   paidMonths: string[];
+  totalInstallments?: number;
+  paidInstallmentsOffset?: number;
   createdAt: string;
 }
 
@@ -88,6 +90,7 @@ export interface UserProfile {
   pinCode?: string;
   notificationsEnabled?: boolean;
   notificationSound?: boolean;
+  dailyReminder9pm?: boolean;
   goals: string[];
   configuredAt: string;
 }

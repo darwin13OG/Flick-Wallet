@@ -51,7 +51,7 @@ export async function triggerNativeDeviceNotification(title: string, body: strin
         await reg.showNotification(title, {
           body,
           icon: '/pwa-192x192.png',
-          badge: '/pwa-192x192.png',
+          badge: '/notification-badge.png',
         });
         return true;
       }

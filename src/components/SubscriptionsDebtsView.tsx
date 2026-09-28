@@ -86,6 +86,8 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
   const [amountRaw, setAmountRaw] = useState('');
   const [dayOfMonth, setDayOfMonth] = useState('');
   const [kind, setKind] = useState<ReminderKind>('suscripcion');
+  const [totalInstallmentsRaw, setTotalInstallmentsRaw] = useState('');
+  const [paidOffsetRaw, setPaidOffsetRaw] = useState('');
   const [filterKind, setFilterKind] = useState<'all' | ReminderKind>('all');
   const [recordInWalletOnPay, setRecordInWalletOnPay] = useState(true);
 
@@ -108,17 +110,28 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
     if (!title.trim() || amt <= 0) return;
 
     const meta = KIND_META[kind];
+    const totalInst = parseInt(totalInstallmentsRaw, 10) || 0;
+    const paidOff = Math.max(0, parseInt(paidOffsetRaw, 10) || 0);
+
     onAddReminder({
       title: title.trim(),
       amount: amt,
       dayOfMonth: day,
       kind,
       emoji: meta.icon,
+      totalInstallments: totalInst > 0 ? totalInst : undefined,
+      paidInstallmentsOffset: totalInst > 0 ? Math.min(totalInst, paidOff) : undefined,
     });
 
     onTriggerNotification({
       title: `Compromiso agendado: ${title.trim()}`,
-      body: `Día ${day} de cada mes · ${curr.symbol}${fmt(amt)} ${curr.code}`,
+      body:
+        totalInst > 0
+          ? `Día ${day} · ${curr.symbol}${fmt(amt)}/mes (${Math.min(
+              totalInst,
+              paidOff
+            )}/${totalInst} cuotas)`
+          : `Día ${day} de cada mes · ${curr.symbol}${fmt(amt)} ${curr.code}`,
       emoji: meta.icon,
       accent: 'indigo',
     });
@@ -126,6 +139,8 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
     setTitle('');
     setAmountRaw('');
     setDayOfMonth('');
+    setTotalInstallmentsRaw('');
+    setPaidOffsetRaw('');
     setShowAddForm(false);
   };
 
@@ -319,6 +334,56 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
             </div>
           </div>
 
+          {/* Seguimiento de Cuotas (Ej. Deuda a 12 meses) */}
+          <div
+            className={`p-3.5 rounded-2xl flex flex-col gap-2.5 border ${
+              isDark ? 'bg-[#12161f] border-white/10' : 'bg-[#f0f4f8] border-slate-200/80'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="font-display text-[11.5px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff]">
+                Control por Cuotas (Opcional · Ideal para Deudas o Créditos)
+              </span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="font-display text-[11px] font-bold" htmlFor="rem-total-inst">
+                  Total de cuotas (deja vacío si es fijo indefinido)
+                </label>
+                <input
+                  id="rem-total-inst"
+                  type="number"
+                  min={1}
+                  max={360}
+                  value={totalInstallmentsRaw}
+                  onChange={(e) => setTotalInstallmentsRaw(e.target.value)}
+                  placeholder="0"
+                  className={`w-full h-10 px-3.5 rounded-xl font-display text-[13px] font-bold tabular-nums focus:outline-none ${
+                    isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                  }`}
+                />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="font-display text-[11px] font-bold" htmlFor="rem-paid-inst">
+                  Cuotas ya pagadas anteriormente
+                </label>
+                <input
+                  id="rem-paid-inst"
+                  type="number"
+                  min={0}
+                  max={360}
+                  value={paidOffsetRaw}
+                  onChange={(e) => setPaidOffsetRaw(e.target.value)}
+                  placeholder="0"
+                  className={`w-full h-10 px-3.5 rounded-xl font-display text-[13px] font-bold tabular-nums focus:outline-none ${
+                    isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                  }`}
+                />
+              </div>
+            </div>
+          </div>
+
           <button
             type="submit"
             className="w-full py-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[14px] font-extrabold shadow-[0_12px_24px_-4px_rgba(99,91,255,0.45),inset_2px_2px_4px_rgba(255,255,255,0.6)] active:scale-98 transition-all"
@@ -394,6 +459,15 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
             const isOverdue = !isPaid && daysDiff < 0;
             const isDueSoon = !isPaid && daysDiff >= 0 && daysDiff <= 3;
             const meta = KIND_META[rem.kind] || KIND_META.pago_mes;
+
+            const hasInstallments = Boolean(rem.totalInstallments && rem.totalInstallments > 0);
+            const totalInst = rem.totalInstallments || 0;
+            const paidInst = hasInstallments
+              ? Math.min(totalInst, (rem.paidInstallmentsOffset || 0) + rem.paidMonths.length)
+              : 0;
+            const remainingInst = hasInstallments ? Math.max(0, totalInst - paidInst) : 0;
+            const instPct =
+              hasInstallments && totalInst > 0 ? Math.round((paidInst / totalInst) * 100) : 0;
 
             return (
               <div
@@ -485,6 +559,40 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
                     <span className="material-symbols-outlined text-[18px]">delete</span>
                   </button>
                 </div>
+
+                {/* Barra de progreso de Cuotas (si tiene cuotas configuradas) */}
+                {hasInstallments && (
+                  <div
+                    className={`p-3 rounded-2xl flex flex-col gap-1.5 border ${
+                      isDark
+                        ? 'bg-[#12161f] border-[#635bff]/30'
+                        : 'bg-[#f6fafe] border-[#635bff]/20'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between text-[11.5px] font-display font-extrabold flex-wrap gap-1">
+                      <span className="text-[#493ee5] dark:text-[#c3c0ff]">
+                        Cuota {paidInst} de {totalInst} pagadas ({instPct}%)
+                      </span>
+                      <span className={isDark ? 'text-slate-300' : 'text-[#464555]'}>
+                        {remainingInst === 0
+                          ? 'Deuda completada'
+                          : `Faltan ${remainingInst} ${
+                              remainingInst === 1 ? 'cuota' : 'cuotas'
+                            } (${
+                              hideBalance
+                                ? `${curr.symbol} •••`
+                                : `${curr.symbol}${fmt(remainingInst * rem.amount)}`
+                            })`}
+                      </span>
+                    </div>
+                    <div className="w-full h-2.5 rounded-full bg-black/10 dark:bg-black/40 p-0.5 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#635bff] to-[#62fae3] transition-all duration-300"
+                        style={{ width: `${paidInst > 0 ? Math.max(6, instPct) : 0}%` }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {/* Fila 2: Recuadro Interior con Monto Mensual Completo + Botón de Acción Amplio */}
                 <div

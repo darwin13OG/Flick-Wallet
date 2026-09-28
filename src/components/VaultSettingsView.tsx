@@ -14,6 +14,8 @@ interface VaultSettingsViewProps {
   reminders: PaymentReminder[];
   onUpdateProfile: (updated: Partial<UserProfile>) => void;
   onLockNow: () => void;
+  onExportBackup: () => void;
+  onImportBackup: (file: File) => Promise<boolean>;
   onResetAllApp: () => void;
   onTriggerNotification: (opts: {
     title: string;
@@ -32,12 +34,15 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
   reminders,
   onUpdateProfile,
   onLockNow,
+  onExportBackup,
+  onImportBackup,
   onResetAllApp,
   onTriggerNotification,
   isDark,
   onToggleDark,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const backupInputRef = useRef<HTMLInputElement | null>(null);
   const { isInstallable, isInstalled, isIOS, install } = usePWAInstall();
 
   const [customUrlInput, setCustomUrlInput] = useState('');
@@ -51,12 +56,15 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
   );
 
   const [pinInput, setPinInput] = useState('');
+  const [showPinText, setShowPinText] = useState(false);
   const [acceptedPinWarning, setAcceptedPinWarning] = useState(false);
+  const [pinValidationError, setPinValidationError] = useState<string | null>(null);
 
   const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
   const fmt = (val: number) => formatCurrencyAmount(val, curr.code);
   const notificationsEnabled = profile.notificationsEnabled !== false;
   const notificationSound = profile.notificationSound !== false;
+  const dailyReminder9pm = profile.dailyReminder9pm !== false;
 
   const showToast = (msg: string) => {
     setStatusMessage(msg);
@@ -161,8 +169,19 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
 
   const handleSavePin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (pinInput.length !== 4 || !acceptedPinWarning) return;
-    onUpdateProfile({ pinCode: pinInput });
+    const cleanedPin = pinInput.replace(/[^0-9]/g, '').slice(0, 4);
+    if (cleanedPin.length !== 4) {
+      setPinValidationError('Debes escribir un PIN numérico de exactamente 4 dígitos.');
+      const el = document.getElementById('pin-in');
+      el?.focus();
+      return;
+    }
+    if (!acceptedPinWarning) {
+      setPinValidationError('Marca la casilla de confirmación para activar tu PIN.');
+      return;
+    }
+    setPinValidationError(null);
+    onUpdateProfile({ pinCode: cleanedPin });
     setPinInput('');
     setAcceptedPinWarning(false);
     showToast('PIN de 4 dígitos activado correctamente.');
@@ -170,7 +189,20 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
 
   const handleRemovePin = () => {
     onUpdateProfile({ pinCode: '' });
+    setPinValidationError(null);
     showToast('PIN de bloqueo desactivado.');
+  };
+
+  const handleBackupFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const ok = await onImportBackup(file);
+    if (ok) {
+      showToast('Copia de seguridad restaurada correctamente.');
+    } else {
+      showToast('Archivo inválido. Selecciona un respaldo .json de FlickWallet.');
+    }
+    e.target.value = '';
   };
 
   const cardCls = isDark
@@ -406,6 +438,48 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                 </span>
               </button>
             </div>
+
+            {/* Recordatorio Diario 9:00 PM */}
+            <button
+              type="button"
+              onClick={() => {
+                const next = !dailyReminder9pm;
+                onUpdateProfile({ dailyReminder9pm: next });
+                showToast(
+                  next
+                    ? 'Recordatorio diario de las 9:00 PM activado.'
+                    : 'Recordatorio diario de las 9:00 PM desactivado.'
+                );
+              }}
+              className={`p-3.5 rounded-2xl flex items-center justify-between gap-3 transition-all text-left ${
+                isDark ? 'bg-[#12161f]' : 'bg-[#f0f4f8]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="material-symbols-outlined text-[19px] text-[#635bff] dark:text-[#c3c0ff] shrink-0">
+                  schedule
+                </span>
+                <div className="min-w-0">
+                  <span className="font-display text-[12.5px] font-extrabold block">
+                    Recordatorio a las 9:00 PM
+                  </span>
+                  <span
+                    className={`text-[11px] block truncate ${
+                      isDark ? 'text-slate-400' : 'text-[#464555]'
+                    }`}
+                  >
+                    Aviso diario para registrar tus gastos del día
+                  </span>
+                </div>
+              </div>
+              <span
+                className={`w-9 h-5 rounded-full p-0.5 flex items-center shrink-0 transition-colors ${
+                  dailyReminder9pm ? 'bg-[#635bff] justify-end' : 'bg-slate-400/50 justify-start'
+                }`}
+              >
+                <span className="w-4 h-4 rounded-full bg-white shadow-2xs" />
+              </span>
+            </button>
           </div>
 
           {/* Presupuesto Mensual y Tope de Gastos Hormiga */}
@@ -489,23 +563,14 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                   <span className="material-symbols-outlined text-[19px]">lock</span>
                 </div>
                 <div>
-                  <h3 className="font-display text-[16px] font-extrabold">PIN de Bloqueo</h3>
+                  <h3 className="font-display text-[16px] font-extrabold">PIN al Iniciar la App</h3>
                   <span className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
-                    {profile.pinCode ? 'Activo' : 'Desactivado'}
+                    {profile.pinCode
+                      ? 'Activo · Se pide automáticamente al entrar'
+                      : 'Desactivado'}
                   </span>
                 </div>
               </div>
-
-              {profile.pinCode && (
-                <button
-                  type="button"
-                  onClick={onLockNow}
-                  className="px-3 py-1.5 rounded-xl bg-[#635bff] text-white font-display text-[11px] font-bold flex items-center gap-1 active:scale-95"
-                >
-                  <span className="material-symbols-outlined text-[14px]">lock</span>
-                  <span>Bloquear</span>
-                </button>
-              )}
             </div>
 
             <div
@@ -525,54 +590,128 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
             {profile.pinCode ? (
               <div className="flex items-center justify-between gap-2 pt-1">
                 <span className="font-display text-[12px] font-bold text-[#006b5f] dark:text-[#62fae3]">
-                  ✓ PIN de 4 dígitos activo
+                  PIN de 4 dígitos activo
                 </span>
                 <button
                   type="button"
                   onClick={handleRemovePin}
-                  className="px-3.5 py-2 rounded-xl bg-[#ffdad6] text-[#93000a] font-display text-[11px] font-bold active:scale-95"
+                  className="px-3.5 py-2 rounded-xl bg-[#ffdadc] text-[#7a0016] font-display text-[11px] font-extrabold active:scale-95"
                 >
                   Quitar PIN
                 </button>
               </div>
             ) : (
               <form onSubmit={handleSavePin} className="flex flex-col gap-3">
-                <input
-                  id="pin-in"
-                  type="password"
-                  inputMode="numeric"
-                  maxLength={4}
-                  value={pinInput}
-                  onChange={(e) => setPinInput(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                  placeholder="••••"
-                  className={`w-full h-11 px-4 rounded-2xl font-display text-[18px] tracking-[0.4em] font-extrabold text-center focus:outline-none ${inputWell}`}
-                />
+                <div className="relative">
+                  <input
+                    id="pin-in"
+                    type={showPinText ? 'text' : 'password'}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    maxLength={4}
+                    value={pinInput}
+                    onChange={(e) => {
+                      const next = e.target.value.replace(/[^0-9]/g, '').slice(0, 4);
+                      setPinInput(next);
+                      if (next.length === 4) setPinValidationError(null);
+                    }}
+                    placeholder="Escribe 4 dígitos"
+                    className={`w-full h-12 pl-4 pr-11 rounded-2xl font-display text-[15px] font-extrabold text-center focus:outline-none ${
+                      pinValidationError ? 'ring-2 ring-rose-500' : ''
+                    } ${inputWell}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPinText((v) => !v)}
+                    aria-label="Mostrar u ocultar PIN"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      {showPinText ? 'visibility_off' : 'visibility'}
+                    </span>
+                  </button>
+                </div>
 
-                <label className="flex items-start gap-2 cursor-pointer text-[11px]">
+                <label className="flex items-start gap-2 cursor-pointer text-[11.5px]">
                   <input
                     type="checkbox"
                     checked={acceptedPinWarning}
-                    onChange={(e) => setAcceptedPinWarning(e.target.checked)}
-                    className="mt-0.5 rounded accent-[#635bff]"
+                    onChange={(e) => {
+                      setAcceptedPinWarning(e.target.checked);
+                      if (e.target.checked) setPinValidationError(null);
+                    }}
+                    className="mt-0.5 w-4 h-4 rounded accent-[#635bff]"
                   />
                   <span className={isDark ? 'text-slate-300' : 'text-[#464555]'}>
                     Entiendo que si olvido mi PIN se restablecerá la app.
                   </span>
                 </label>
 
+                {pinValidationError && (
+                  <div className="px-3 py-2 rounded-xl bg-[#ffdadc] text-[#7a0016] font-display text-[11px] font-bold flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[15px]">error</span>
+                    <span>{pinValidationError}</span>
+                  </div>
+                )}
+
                 <button
                   type="submit"
-                  disabled={pinInput.length !== 4 || !acceptedPinWarning}
-                  className={`w-full py-3 rounded-2xl font-display text-[12px] font-bold text-white transition-all ${
-                    pinInput.length === 4 && acceptedPinWarning
-                      ? 'bg-[#635bff] shadow-sm active:scale-98'
-                      : 'bg-slate-400/50 cursor-not-allowed'
-                  }`}
+                  className="w-full py-3 rounded-2xl bg-[#635bff] text-white font-display text-[12.5px] font-extrabold shadow-sm active:scale-98 transition-all"
                 >
                   Activar PIN
                 </button>
               </form>
             )}
+          </div>
+
+          {/* Copia de Seguridad Local (Exportar e Importar Datos) */}
+          <div className={`rounded-3xl p-5 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-2xl bg-[#62fae3]/40 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[19px]">backup</span>
+              </div>
+              <div>
+                <h3 className="font-display text-[16px] font-extrabold">Copia de Seguridad</h3>
+                <span className={`text-[11px] ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
+                  Descarga o restaura tus datos en este u otro dispositivo
+                </span>
+              </div>
+            </div>
+
+            <input
+              ref={backupInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleBackupFileChange}
+              className="hidden"
+            />
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => {
+                  onExportBackup();
+                  showToast('Respaldo descargado en tu dispositivo.');
+                }}
+                className="py-3 px-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+              >
+                <span className="material-symbols-outlined text-[17px]">download</span>
+                <span>Descargar Respaldo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => backupInputRef.current?.click()}
+                className={`py-3 px-3.5 rounded-2xl font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 transition-all active:scale-95 ${
+                  isDark
+                    ? 'bg-[#12161f] text-slate-200 border border-white/10'
+                    : 'bg-[#f0f4f8] text-[#171c1f]'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[17px]">upload_file</span>
+                <span>Restaurar Respaldo</span>
+              </button>
+            </div>
           </div>
 
           {/* Botón al final de Ajustes para Reiniciar Todo */}

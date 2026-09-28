@@ -12,6 +12,7 @@ interface AlcanciaViewProps {
   savingsGoals: SavingsGoal[];
   onAddGoal: (goal: Omit<SavingsGoal, 'id' | 'createdAt'>) => SavingsGoal;
   onDepositToGoal: (goalId: string, amount: number) => void;
+  onWithdrawFromGoal: (goalId: string, amount: number) => void;
   onDeleteGoal: (goalId: string) => void;
   hideBalance: boolean;
   isDark: boolean;
@@ -38,6 +39,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
   savingsGoals,
   onAddGoal,
   onDepositToGoal,
+  onWithdrawFromGoal,
   onDeleteGoal,
   hideBalance,
   isDark,
@@ -49,6 +51,10 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
 
   const [depositingGoalId, setDepositingGoalId] = useState<string | null>(null);
   const [depositAmountRaw, setDepositAmountRaw] = useState('');
+
+  const [withdrawingGoalId, setWithdrawingGoalId] = useState<string | null>(null);
+  const [withdrawAmountRaw, setWithdrawAmountRaw] = useState('');
+  const [withdrawError, setWithdrawError] = useState<string | null>(null);
 
   const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
   const fmt = (val: number) => formatCurrencyAmount(val, curr.code);
@@ -82,6 +88,22 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
     onDepositToGoal(goalId, amt);
     setDepositAmountRaw('');
     setDepositingGoalId(null);
+  };
+
+  const handleWithdrawSubmit = (e: React.FormEvent, goal: SavingsGoal) => {
+    e.preventDefault();
+    const amt = parseFloat(withdrawAmountRaw) || 0;
+    if (amt <= 0) return;
+    if (amt > goal.savedAmount) {
+      setWithdrawError(
+        `Solo tienes ${curr.symbol}${fmt(goal.savedAmount)} ${curr.code} disponibles en esta alcancía.`
+      );
+      return;
+    }
+    setWithdrawError(null);
+    onWithdrawFromGoal(goal.id, amt);
+    setWithdrawAmountRaw('');
+    setWithdrawingGoalId(null);
   };
 
   const cardCls = isDark
@@ -260,6 +282,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
             const remaining = Math.max(0, goal.targetAmount - goal.savedAmount);
             const isCompleted = pct >= 100;
             const isDepositing = depositingGoalId === goal.id;
+            const isWithdrawing = withdrawingGoalId === goal.id;
 
             return (
               <div
@@ -340,18 +363,43 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                   </div>
                 </div>
 
-                {/* Fila 3: Botón amplio para meter dinero */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setDepositingGoalId(isDepositing ? null : goal.id);
-                    setDepositAmountRaw('');
-                  }}
-                  className="w-full py-2.5 px-4 rounded-2xl bg-[#635bff] text-white font-display text-[12.5px] font-bold flex items-center justify-center gap-1.5 shadow-[0_6px_14px_rgba(99,91,255,0.3),inset_1px_1px_2px_rgba(255,255,255,0.6)] active:scale-98 transition-transform"
-                >
-                  <span className="material-symbols-outlined text-[17px]">savings</span>
-                  <span>{isDepositing ? 'Cancelar abono' : '+ Meter dinero en esta alcancía'}</span>
-                </button>
+                {/* Fila 3: Botones para Meter o Retirar dinero */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setWithdrawingGoalId(null);
+                      setWithdrawError(null);
+                      setDepositingGoalId(isDepositing ? null : goal.id);
+                      setDepositAmountRaw('');
+                    }}
+                    className="w-full py-2.5 px-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_6px_14px_rgba(99,91,255,0.3),inset_1px_1px_2px_rgba(255,255,255,0.6)] active:scale-98 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-[17px]">savings</span>
+                    <span>{isDepositing ? 'Cancelar abono' : '+ Meter dinero'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={goal.savedAmount <= 0}
+                    onClick={() => {
+                      setDepositingGoalId(null);
+                      setWithdrawError(null);
+                      setWithdrawingGoalId(isWithdrawing ? null : goal.id);
+                      setWithdrawAmountRaw('');
+                    }}
+                    className={`w-full py-2.5 px-3.5 rounded-2xl font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 transition-all ${
+                      goal.savedAmount <= 0
+                        ? 'opacity-40 cursor-not-allowed bg-slate-200 text-slate-500 dark:bg-slate-800 dark:text-slate-500'
+                        : isDark
+                        ? 'bg-[#12161f] text-[#62fae3] border border-[#62fae3]/35 active:scale-98'
+                        : 'bg-[#e2f8f5] text-[#004d44] border border-[#006b5f]/25 active:scale-98'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[17px]">payments</span>
+                    <span>{isWithdrawing ? 'Cancelar retiro' : 'Retirar dinero'}</span>
+                  </button>
+                </div>
 
                 {/* Panel desplegable para añadir dinero */}
                 {isDepositing && (
@@ -392,6 +440,70 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                         Guardar
                       </button>
                     </div>
+                  </form>
+                )}
+
+                {/* Panel desplegable para retirar dinero de la alcancía */}
+                {isWithdrawing && (
+                  <form
+                    onSubmit={(e) => handleWithdrawSubmit(e, goal)}
+                    className={`p-3.5 rounded-2xl flex flex-col gap-2.5 border ${
+                      isDark
+                        ? 'bg-[#12161f] border-[#62fae3]/40'
+                        : 'bg-[#f0f4f8] border-[#006b5f]/30'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <label className="font-display text-[11px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3]">
+                        ¿Cuánto deseas retirar al saldo disponible?
+                      </label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setWithdrawAmountRaw(String(goal.savedAmount));
+                          setWithdrawError(null);
+                        }}
+                        className="font-display text-[10.5px] font-extrabold text-[#635bff] dark:text-[#c3c0ff] hover:underline shrink-0"
+                      >
+                        Retirar todo
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <div className="relative flex-1">
+                        <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-display text-[14px] font-bold text-slate-400">
+                          {curr.symbol}
+                        </span>
+                        <input
+                          type="text"
+                          inputMode="decimal"
+                          autoFocus
+                          value={formatLiveNumberString(withdrawAmountRaw, curr.code)}
+                          onChange={(e) => {
+                            setWithdrawAmountRaw(
+                              parseTypedCurrencyInput(e.target.value, curr.code)
+                            );
+                            setWithdrawError(null);
+                          }}
+                          placeholder="0"
+                          className={`w-full h-11 pl-9 pr-3 rounded-xl font-display text-[15px] font-extrabold tabular-nums focus:outline-none ${
+                            isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
+                          }`}
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        className="h-11 px-4 rounded-xl bg-[#635bff] text-white font-display text-[12px] font-extrabold shadow-sm active:scale-95 transition-transform shrink-0"
+                      >
+                        Retirar
+                      </button>
+                    </div>
+
+                    {withdrawError && (
+                      <p className="font-display text-[11px] font-bold text-rose-500">
+                        {withdrawError}
+                      </p>
+                    )}
                   </form>
                 )}
               </div>

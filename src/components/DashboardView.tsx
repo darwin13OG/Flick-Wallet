@@ -70,6 +70,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
         expenseCount++;
       } else if (m.type === 'alcancia') {
         totalAlcancia += m.amount;
+      } else if (m.type === 'retiro_alcancia') {
+        totalAlcancia = Math.max(0, totalAlcancia - m.amount);
       } else {
         totalHormiga += m.amount;
         expenseCount++;
@@ -140,7 +142,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const filteredMovements = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     return movements.filter((m) => {
-      const matchesType = filterType === 'all' || m.type === filterType;
+      const matchesType =
+        filterType === 'all' ||
+        m.type === filterType ||
+        (filterType === 'alcancia' && m.type === 'retiro_alcancia');
       if (!matchesType) return false;
       if (!q) return true;
       const cat = CATEGORIES[m.category] || CATEGORIES.otros;
@@ -692,9 +697,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex flex-col gap-2.5">
               {displayedMovements.map((mov) => {
                 const cat = CATEGORIES[mov.category] || CATEGORIES.otros;
-                const isIncome = mov.type === 'ingreso';
+                const isIncome = mov.type === 'ingreso' || mov.type === 'retiro_alcancia';
                 const isHormiga = mov.type === 'hormiga';
                 const isAlcancia = mov.type === 'alcancia';
+                const isRetiroAlcancia = mov.type === 'retiro_alcancia';
 
                 return (
                   <div
@@ -729,7 +735,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                             <span>{cat.name}</span>
                             <span aria-hidden="true">·</span>
                             <span>
-                              {isIncome
+                              {isRetiroAlcancia
+                                ? 'Retiro de Alcancía'
+                                : isIncome
                                 ? 'Ingreso'
                                 : isAlcancia
                                 ? 'Alcancía'

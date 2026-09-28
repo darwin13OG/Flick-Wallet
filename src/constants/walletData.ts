@@ -426,6 +426,9 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   customAvatarImg: '',
   useCustomAvatar: false,
   monthlyIncome: 0,
+  notificationsEnabled: true,
+  notificationSound: true,
+  dailyReminder9pm: true,
   goals: [],
   configuredAt: new Date().toISOString(),
 };

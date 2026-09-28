@@ -39,6 +39,7 @@ const STORAGE_KEYS = {
   HIDE_BALANCE: 'flickwallet_hide_balance_v4',
   DARK_MODE: 'flickwallet_dark_mode_v4',
   ONBOARDED: 'flickwallet_onboarding_completed_v4',
+  LAST_9PM_REMINDER: 'flickwallet_last_9pm_reminder_v4',
 };
 
 export default function App() {
@@ -48,12 +49,17 @@ export default function App() {
       if (saved) {
         const parsed = JSON.parse(saved);
         const gKey = parsed.gender in GENDER_DATA ? parsed.gender : 'hombre';
+        const rawPin = String(parsed.pinCode || '')
+          .replace(/\D/g, '')
+          .slice(0, 4);
         return {
           ...DEFAULT_USER_PROFILE,
           ...parsed,
           gender: gKey,
+          pinCode: rawPin.length === 4 ? rawPin : '',
           notificationsEnabled: parsed.notificationsEnabled !== false,
           notificationSound: parsed.notificationSound !== false,
+          dailyReminder9pm: parsed.dailyReminder9pm !== false,
           monthlyIncome:
             typeof parsed.monthlyIncome === 'number'
               ? parsed.monthlyIncome
@@ -155,7 +161,10 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
       if (saved) {
         const parsed = JSON.parse(saved);
-        return Boolean(parsed.pinCode && String(parsed.pinCode).length === 4);
+        const cleanPin = String(parsed.pinCode || '')
+          .replace(/\D/g, '')
+          .slice(0, 4);
+        return cleanPin.length === 4;
       }
     } catch {
       // ignore
@@ -351,6 +360,108 @@ export default function App() {
     handleTriggerNotification,
   ]);
 
+  // Daily 9:00 PM (21:00) Reminder Notification Scheduler
+  useEffect(() => {
+    if (!onboardingCompleted) return;
+
+    const enabled =
+      profile.notificationsEnabled !== false && profile.dailyReminder9pm !== false;
+
+    const getLocalDateKey = (d: Date) => {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${y}-${m}-${day}`;
+    };
+
+    const build9pmMessage = () => {
+      const todayKey = getLocalDateKey(new Date());
+      const todayMovementsCount = movements.filter(
+        (m) => m.date && m.date.slice(0, 10) === todayKey
+      ).length;
+      return todayMovementsCount === 0
+        ? 'Son las 9:00 PM. ¿Tuviste algún gasto hormiga, ingreso o abono hoy? Regístralo en segundos antes de cerrar tu día.'
+        : `Son las 9:00 PM. Hoy registraste ${todayMovementsCount} ${
+            todayMovementsCount === 1 ? 'movimiento' : 'movimientos'
+          }. ¿Quedó algún gasto pendiente por anotar?`;
+    };
+
+    // Sync schedule with Service Worker for PWA background support
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.ready
+        .then((reg) => {
+          reg.active?.postMessage({
+            type: 'SCHEDULE_9PM_REMINDER',
+            enabled,
+            body: build9pmMessage(),
+            alreadyNotifiedDate: localStorage.getItem(STORAGE_KEYS.LAST_9PM_REMINDER),
+          });
+        })
+        .catch(() => {});
+    }
+
+    if (!enabled) return;
+
+    const checkAndFire9pmReminder = () => {
+      const now = new Date();
+      // Trigger at or after 21:00 (9:00 PM) local time, once per calendar day
+      if (now.getHours() >= 21) {
+        const todayKey = getLocalDateKey(now);
+        const lastFired = localStorage.getItem(STORAGE_KEYS.LAST_9PM_REMINDER);
+        if (lastFired !== todayKey) {
+          try {
+            localStorage.setItem(STORAGE_KEYS.LAST_9PM_REMINDER, todayKey);
+          } catch {
+            // ignore
+          }
+          handleTriggerNotification({
+            title: 'Recordatorio de las 9:00 PM',
+            body: build9pmMessage(),
+            emoji: 'schedule',
+            accent: 'indigo',
+            actionTab: 'add',
+            actionLabel: 'Registrar ahora',
+          });
+        }
+      }
+    };
+
+    // Calculate exact milliseconds until 21:00:00 today
+    const now = new Date();
+    const target9pm = new Date(now);
+    target9pm.setHours(21, 0, 0, 0);
+    let exactTimeout: ReturnType<typeof setTimeout> | null = null;
+
+    if (now.getTime() < target9pm.getTime()) {
+      exactTimeout = setTimeout(
+        checkAndFire9pmReminder,
+        target9pm.getTime() - now.getTime() + 250
+      );
+    } else {
+      checkAndFire9pmReminder();
+    }
+
+    const interval = setInterval(checkAndFire9pmReminder, 45000);
+    const onVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        checkAndFire9pmReminder();
+      }
+    };
+    document.addEventListener('visibilitychange', onVisibility);
+
+    return () => {
+      if (exactTimeout) clearTimeout(exactTimeout);
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibility);
+    };
+  }, [
+    onboardingCompleted,
+    profile.notificationsEnabled,
+    profile.dailyReminder9pm,
+    movements,
+    handleTriggerNotification,
+  ]);
+
   const handleUpdateProfile = (updated: Partial<UserProfile>) => {
     setProfile((prev) => ({ ...prev, ...updated }));
   };
@@ -409,6 +520,42 @@ export default function App() {
         accent: 'mint',
       });
     }
+  };
+
+  const handleWithdrawFromGoal = (goalId: string, amount: number) => {
+    const targetGoal = savingsGoals.find((g) => g.id === goalId);
+    if (!targetGoal || amount <= 0) return;
+    const actualWithdraw = Math.min(targetGoal.savedAmount, amount);
+    if (actualWithdraw <= 0) return;
+
+    setSavingsGoals((prev) =>
+      prev.map((g) =>
+        g.id === goalId
+          ? { ...g, savedAmount: Math.max(0, g.savedAmount - actualWithdraw) }
+          : g
+      )
+    );
+
+    const entry: Movement = {
+      id: `mov-${Date.now()}`,
+      title: `Retiro de ${targetGoal.name}`,
+      amount: actualWithdraw,
+      type: 'retiro_alcancia',
+      category: 'alcancia',
+      goalId,
+      date: new Date().toISOString(),
+    };
+    setMovements((prev) => [entry, ...prev]);
+
+    handleTriggerNotification({
+      title: `Retiro de "${targetGoal.name}"`,
+      body: `Devolviste ${curr.symbol}${formatCurrencyAmount(
+        actualWithdraw,
+        curr.code
+      )} ${curr.code} a tu saldo disponible.`,
+      emoji: 'payments',
+      accent: 'indigo',
+    });
   };
 
   const handleDeleteGoal = (goalId: string) => {
@@ -471,8 +618,120 @@ export default function App() {
             : g
         )
       );
+    } else if (target && target.type === 'retiro_alcancia' && target.goalId) {
+      setSavingsGoals((prev) =>
+        prev.map((g) =>
+          g.id === target.goalId
+            ? { ...g, savedAmount: g.savedAmount + target.amount }
+            : g
+        )
+      );
     }
     setMovements((prev) => prev.filter((m) => m.id !== id));
+  };
+
+  const handleExportBackup = () => {
+    try {
+      const payload = {
+        app: 'FlickWallet',
+        version: 4,
+        exportedAt: new Date().toISOString(),
+        profile,
+        movements,
+        savingsGoals,
+        reminders,
+        isDark,
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {
+        type: 'application/json',
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const dateStr = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `flickwallet-respaldo-${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      handleTriggerNotification({
+        title: 'Copia de seguridad descargada',
+        body: 'Tu archivo JSON se guardó en tu dispositivo correctamente.',
+        emoji: 'download_done',
+        accent: 'mint',
+      });
+    } catch {
+      handleTriggerNotification({
+        title: 'Error al exportar',
+        body: 'No se pudo generar el archivo de respaldo.',
+        emoji: 'error',
+        accent: 'rose',
+      });
+    }
+  };
+
+  const handleImportBackup = (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const text = typeof reader.result === 'string' ? reader.result : '';
+          const parsed = JSON.parse(text);
+          if (!parsed || typeof parsed !== 'object' || !parsed.profile) {
+            handleTriggerNotification({
+              title: 'Archivo no válido',
+              body: 'Selecciona un archivo .json exportado desde FlickWallet.',
+              emoji: 'error',
+              accent: 'rose',
+            });
+            resolve(false);
+            return;
+          }
+
+          const rawPin = String(parsed.profile.pinCode || '')
+            .replace(/\D/g, '')
+            .slice(0, 4);
+          const restoredProfile: UserProfile = {
+            ...DEFAULT_USER_PROFILE,
+            ...parsed.profile,
+            pinCode: rawPin.length === 4 ? rawPin : '',
+            monthlyIncome:
+              typeof parsed.profile.monthlyIncome === 'number' &&
+              parsed.profile.monthlyIncome > 0
+                ? parsed.profile.monthlyIncome
+                : profile.monthlyIncome || 1,
+          };
+
+          setProfile(restoredProfile);
+          if (Array.isArray(parsed.movements)) setMovements(parsed.movements);
+          if (Array.isArray(parsed.savingsGoals)) setSavingsGoals(parsed.savingsGoals);
+          if (Array.isArray(parsed.reminders)) setReminders(parsed.reminders);
+          if (typeof parsed.isDark === 'boolean') setIsDark(parsed.isDark);
+
+          localStorage.setItem(STORAGE_KEYS.ONBOARDED, 'true');
+          setOnboardingCompleted(true);
+
+          handleTriggerNotification({
+            title: 'Copia de seguridad restaurada',
+            body: 'Tus movimientos, alcancías, deudas y perfil fueron recuperados.',
+            emoji: 'cloud_done',
+            accent: 'mint',
+          });
+          resolve(true);
+        } catch {
+          handleTriggerNotification({
+            title: 'Error al restaurar copia',
+            body: 'El archivo seleccionado está dañado o no tiene formato válido.',
+            emoji: 'error',
+            accent: 'rose',
+          });
+          resolve(false);
+        }
+      };
+      reader.onerror = () => resolve(false);
+      reader.readAsText(file);
+    });
   };
 
   const handleResetAllApp = () => {
@@ -638,19 +897,6 @@ export default function App() {
                   </span>
                 )}
               </button>
-
-              {profile.pinCode && (
-                <button
-                  type="button"
-                  onClick={() => setIsLocked(true)}
-                  title="Bloquear con PIN"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                    isDark ? 'bg-[#1b202c] text-rose-300' : 'bg-[#ffdadc] text-[#400010]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">lock</span>
-                </button>
-              )}
             </div>
           </div>
 
@@ -790,19 +1036,6 @@ export default function App() {
                 )}
               </button>
 
-              {profile.pinCode && (
-                <button
-                  type="button"
-                  onClick={() => setIsLocked(true)}
-                  title="Bloquear con PIN"
-                  className={`w-9 h-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
-                    isDark ? 'bg-[#1b202c] text-rose-300' : 'bg-[#ffdadc] text-[#400010]'
-                  }`}
-                >
-                  <span className="material-symbols-outlined text-[18px]">lock</span>
-                </button>
-              )}
-
               {/* User Profile Photo Only */}
               <button
                 type="button"
@@ -850,6 +1083,7 @@ export default function App() {
               savingsGoals={savingsGoals}
               onAddGoal={handleAddGoal}
               onDepositToGoal={handleDepositToGoal}
+              onWithdrawFromGoal={handleWithdrawFromGoal}
               onDeleteGoal={handleDeleteGoal}
               hideBalance={hideBalance}
               isDark={isDark}
@@ -881,6 +1115,8 @@ export default function App() {
               reminders={reminders}
               onUpdateProfile={handleUpdateProfile}
               onLockNow={() => setIsLocked(true)}
+              onExportBackup={handleExportBackup}
+              onImportBackup={handleImportBackup}
               onResetAllApp={handleResetAllApp}
               onTriggerNotification={handleTriggerNotification}
               isDark={isDark}

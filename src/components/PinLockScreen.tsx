@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { UserProfile } from '../types/wallet';
 import { UserClayAvatar, WalletClayLogo } from './ClayAvatar';
 
@@ -19,29 +19,59 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
   const [errorShake, setErrorShake] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
 
-  const handleDigit = (digit: string) => {
-    if (enteredPin.length >= 4) return;
-    const next = enteredPin + digit;
-    setEnteredPin(next);
+  const expectedPin = String(profile.pinCode || '').replace(/[^0-9]/g, '').slice(0, 4);
 
-    if (next.length === 4) {
-      if (next === profile.pinCode) {
-        setTimeout(() => {
+  const handleDigit = useCallback(
+    (digit: string) => {
+      if (errorShake) return;
+      setEnteredPin((prev) => {
+        if (prev.length >= 4) return prev;
+        return prev + digit;
+      });
+    },
+    [errorShake]
+  );
+
+  const handleBackspace = useCallback(() => {
+    setErrorShake(false);
+    setEnteredPin((prev) => prev.slice(0, -1));
+  }, []);
+
+  useEffect(() => {
+    if (enteredPin.length === 4) {
+      if (!expectedPin || enteredPin === expectedPin) {
+        const t = setTimeout(() => {
           onUnlock();
-        }, 120);
+        }, 100);
+        return () => clearTimeout(t);
       } else {
         setErrorShake(true);
-        setTimeout(() => {
+        const t = setTimeout(() => {
           setEnteredPin('');
           setErrorShake(false);
-        }, 480);
+        }, 550);
+        return () => clearTimeout(t);
       }
     }
-  };
+  }, [enteredPin, expectedPin, onUnlock]);
 
-  const handleBackspace = () => {
-    setEnteredPin((prev) => prev.slice(0, -1));
-  };
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key >= '0' && e.key <= '9') {
+        e.preventDefault();
+        handleDigit(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleBackspace();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        setEnteredPin('');
+        setErrorShake(false);
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleDigit, handleBackspace]);
 
   const keyBtnCls = isDark
     ? 'bg-[#242b3a] text-white shadow-[0_6px_12px_rgba(0,0,0,0.35),inset_1px_2px_3px_rgba(255,255,255,0.08)] active:scale-95'
@@ -74,30 +104,36 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           </p>
         </div>
 
-        {/* 4 PIN Dots */}
-        <div className={`flex items-center justify-center gap-4 my-1 ${errorShake ? 'animate-bounce' : ''}`}>
+        {/* 4 PIN Boxes */}
+        <div
+          className={`flex items-center justify-center gap-3 my-1 ${
+            errorShake ? 'animate-bounce' : ''
+          }`}
+        >
           {[0, 1, 2, 3].map((idx) => {
             const filled = idx < enteredPin.length;
             return (
               <div
                 key={idx}
-                className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center font-display text-[20px] font-extrabold transition-all duration-150 ${
                   errorShake
-                    ? 'bg-rose-500 scale-110'
+                    ? 'bg-rose-500/20 border-2 border-rose-500 text-rose-500 scale-105'
                     : filled
-                    ? 'bg-[#635bff] scale-110 shadow-[0_0_10px_rgba(99,91,255,0.65)]'
+                    ? 'bg-[#635bff] text-white border-2 border-[#635bff] scale-105 shadow-[0_6px_14px_rgba(99,91,255,0.4)]'
                     : isDark
-                    ? 'bg-[#12161f] border border-white/15'
-                    : 'bg-[#e4e9ed]'
+                    ? 'bg-[#12161f] border-2 border-white/15 text-slate-400'
+                    : 'bg-[#f0f4f8] border-2 border-slate-300/70 text-[#171c1f]'
                 }`}
-              />
+              >
+                {filled ? '•' : ''}
+              </div>
             );
           })}
         </div>
 
         {errorShake && (
           <span className="font-display text-[12px] font-bold text-rose-500">
-            PIN incorrecto. Intenta de nuevo.
+            PIN incorrecto. Intenta nuevamente.
           </span>
         )}
 
@@ -107,23 +143,28 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
             isDark ? 'bg-[#12161f]' : 'bg-[#f0f4f8]'
           }`}
         >
-          {['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', 'BACK'].map((k, i) => {
-            if (k === '') return <div key={i} />;
-            return (
-              <button
-                key={k}
-                type="button"
-                onClick={() => (k === 'BACK' ? handleBackspace() : handleDigit(k))}
-                className={`h-13 rounded-2xl font-display text-[20px] font-extrabold flex items-center justify-center transition-all ${keyBtnCls}`}
-              >
-                {k === 'BACK' ? (
-                  <span className="material-symbols-outlined text-[20px]">backspace</span>
-                ) : (
-                  k
-                )}
-              </button>
-            );
-          })}
+          {['1', '2', '3', '4', '5', '6', '7', '8', '9', 'CLEAR', '0', 'BACK'].map((k) => (
+            <button
+              key={k}
+              type="button"
+              onClick={() => {
+                if (k === 'BACK') handleBackspace();
+                else if (k === 'CLEAR') {
+                  setEnteredPin('');
+                  setErrorShake(false);
+                } else handleDigit(k);
+              }}
+              className={`h-13 rounded-2xl font-display text-[20px] font-extrabold flex items-center justify-center transition-all ${keyBtnCls}`}
+            >
+              {k === 'BACK' ? (
+                <span className="material-symbols-outlined text-[20px]">backspace</span>
+              ) : k === 'CLEAR' ? (
+                <span className="text-[12px] font-bold opacity-70">Limpiar</span>
+              ) : (
+                k
+              )}
+            </button>
+          ))}
         </div>
 
         {/* Forgot PIN -> Reset App */}
@@ -139,11 +180,11 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
           <div
             className={`w-full p-3.5 rounded-2xl flex flex-col gap-2.5 text-left border ${
               isDark
-                ? 'bg-rose-500/10 border-rose-500/30 text-rose-200'
-                : 'bg-[#ffdad6]/70 border-rose-300 text-[#93000a]'
+                ? 'bg-rose-500/15 border-rose-500/40 text-rose-100'
+                : 'bg-[#ffdadc] border-rose-300 text-[#7a0016]'
             }`}
           >
-            <p className="text-[11px] leading-relaxed font-semibold">
+            <p className="text-[11.5px] leading-relaxed font-semibold">
               <strong>Atención:</strong> Al restablecer la aplicación se borrarán todos los datos,
               metas y movimientos guardados en este dispositivo para poder entrar de nuevo.
             </p>
@@ -151,14 +192,16 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
               <button
                 type="button"
                 onClick={onResetApp}
-                className="flex-1 py-2 px-3 rounded-xl bg-[#ba1a1a] text-white font-display text-[11px] font-bold"
+                className="flex-1 py-2.5 px-3 rounded-xl bg-[#e11d48] text-white font-display text-[11.5px] font-extrabold"
               >
                 Sí, restablecer todo
               </button>
               <button
                 type="button"
                 onClick={() => setConfirmReset(false)}
-                className="py-2 px-3 rounded-xl bg-black/10 dark:bg-white/10 font-display text-[11px] font-bold"
+                className={`py-2.5 px-3 rounded-xl font-display text-[11.5px] font-bold ${
+                  isDark ? 'bg-[#12161f] text-slate-200' : 'bg-white text-[#171c1f]'
+                }`}
               >
                 Cancelar
               </button>
