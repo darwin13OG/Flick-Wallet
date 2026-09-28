@@ -23,29 +23,8 @@ interface QuickAddViewProps {
   isDark: boolean;
 }
 
-const QUICK_SUGGESTIONS: Record<
-  MovementType,
-  { title: string; amount: string; cat: CategoryId }[]
-> = {
-  hormiga: [
-    { title: 'Café & Snack', amount: '12', cat: 'cafe' },
-    { title: 'Streaming', amount: '15', cat: 'streaming' },
-    { title: 'Antojo Delivery', amount: '25', cat: 'delivery' },
-  ],
-  fijo: [
-    { title: 'Vivienda / Renta', amount: '950', cat: 'vivienda' },
-    { title: 'Supermercado', amount: '180', cat: 'supermercado' },
-    { title: 'Servicios & Internet', amount: '85', cat: 'servicios' },
-  ],
-  ingreso: [
-    { title: 'Sueldo / Quincena', amount: '2000', cat: 'sueldo' },
-    { title: 'Ingreso Extra', amount: '350', cat: 'freelance' },
-  ],
-  alcancia: [
-    { title: 'Abono a mi Alcancía', amount: '50', cat: 'alcancia' },
-    { title: 'Ahorro Quincenal', amount: '150', cat: 'alcancia' },
-  ],
-};
+const resolveGoalIcon = (val?: string) =>
+  val && /^[a-z0-9_]+$/.test(val) ? val : 'savings';
 
 export const QuickAddView: React.FC<QuickAddViewProps> = ({
   profile,
@@ -61,7 +40,6 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
   const [category, setCategory] = useState<CategoryId>('cafe');
   const [selectedGoalId, setSelectedGoalId] = useState<string>(savingsGoals[0]?.id || '');
 
-  // Inline creation of Alcancía if user chooses "Alcancía" and has none (or wants a new one)
   const [creatingGoal, setCreatingGoal] = useState<boolean>(false);
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalTargetRaw, setNewGoalTargetRaw] = useState('');
@@ -121,7 +99,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
       name: newGoalName.trim(),
       targetAmount: target,
       savedAmount: 0,
-      emoji: '🐷',
+      emoji: 'savings',
     });
     setSelectedGoalId(created.id);
     setNewGoalName('');
@@ -135,7 +113,6 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
 
     let targetGoalId = selectedGoalId || savingsGoals[0]?.id;
 
-    // If user is in 'alcancia' mode and hasn't created a goal yet, create it first if fields are filled
     if (movType === 'alcancia' && !targetGoalId) {
       const target = parseFloat(newGoalTargetRaw) || 0;
       if (!newGoalName.trim() || target <= 0) {
@@ -145,7 +122,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
         name: newGoalName.trim(),
         targetAmount: target,
         savedAmount: 0,
-        emoji: '🐷',
+        emoji: 'savings',
       });
       targetGoalId = created.id;
     }
@@ -190,36 +167,36 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
       onSubmit={handleSave}
       className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-3.5 pb-8"
     >
-      {/* BLOQUE SUPERIOR / COLUMNA IZQUIERDA EN PC: Tipo + Visor de Monto + Teclado (Visible sin bajar) */}
+      {/* Columna Izquierda en PC: Tipo + Visor de Monto + Teclado */}
       <div className={`lg:col-span-6 rounded-3xl p-4 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
-        {/* 1. Selector de Tipo de Movimiento (Incluye Añadir dinero en Alcancía) */}
+        {/* 1. Selector de Tipo de Movimiento */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {[
             {
               id: 'hormiga' as MovementType,
               label: 'Hormiga',
-              emoji: '🐜',
+              icon: 'bug_report',
               activeCls:
                 'border-[#a42f46] bg-[#ffdadc]/60 text-[#400010] dark:bg-rose-500/25 dark:text-rose-200',
             },
             {
               id: 'fijo' as MovementType,
               label: 'Gasto Fijo',
-              emoji: '🏠',
+              icon: 'home',
               activeCls:
                 'border-[#493ee5] bg-[#e2dfff]/60 text-[#0f0069] dark:bg-indigo-500/25 dark:text-indigo-200',
             },
             {
               id: 'ingreso' as MovementType,
               label: 'Ingreso',
-              emoji: '💰',
+              icon: 'payments',
               activeCls:
                 'border-[#006b5f] bg-[#62fae3]/60 text-[#00201c] dark:bg-emerald-500/25 dark:text-emerald-200',
             },
             {
               id: 'alcancia' as MovementType,
               label: 'En Alcancía',
-              emoji: '🐷',
+              icon: 'savings',
               activeCls:
                 'border-[#635bff] bg-[#e2dfff]/80 text-[#321ed2] dark:bg-[#635bff]/30 dark:text-indigo-100',
             },
@@ -238,7 +215,12 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                     : 'border-transparent bg-[#f0f4f8] text-[#464555]'
                 }`}
               >
-                <span className="text-base">{item.emoji}</span>
+                <span
+                  className="material-symbols-outlined text-[18px]"
+                  style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
+                >
+                  {item.icon}
+                </span>
                 <span className="font-display text-[11px] font-bold leading-tight">
                   {item.label}
                 </span>
@@ -286,7 +268,9 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                             : 'bg-white text-[#171c1f]'
                         }`}
                       >
-                        <span>{g.emoji}</span>
+                        <span className="material-symbols-outlined text-[15px]">
+                          {resolveGoalIcon(g.emoji)}
+                        </span>
                         <span>{g.name}</span>
                         <span className="opacity-75">
                           ({curr.symbol}
@@ -319,7 +303,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                     type="text"
                     value={newGoalName}
                     onChange={(e) => setNewGoalName(e.target.value)}
-                    placeholder="1. Nombre (Ej. Viaje, Moto...)"
+                    placeholder="1. Nombre de la meta"
                     className={`h-10 px-3 rounded-xl text-[12px] font-medium focus:outline-none ${
                       isDark ? 'bg-[#1b202c] text-white' : 'bg-white text-[#171c1f]'
                     }`}
@@ -354,7 +338,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           </div>
         )}
 
-        {/* 2. Visor de Monto en Vivo (También permite escribir directamente y ver los números) */}
+        {/* 2. Visor de Monto en Vivo */}
         <div
           className={`w-full py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative ${
             isDark
@@ -405,7 +389,6 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
             />
           </div>
 
-          {/* Simulador de impacto compacto */}
           <div className="text-[11px] text-center text-slate-400">
             {movType === 'hormiga'
               ? `5 veces/semana = ${curr.symbol}${formatCurrencyAmount(numericAmount * 5 * 52, curr.code)} ${curr.code}/año`
@@ -417,7 +400,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           </div>
         </div>
 
-        {/* 3. Teclado Numérico Táctil justo debajo del visor para ver los números al escribirlos */}
+        {/* 3. Teclado Numérico Táctil */}
         <div
           className={`rounded-2xl p-2.5 grid grid-cols-3 gap-2 ${
             isDark ? 'bg-[#12161f]' : 'bg-[#eaeef2]'
@@ -455,7 +438,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           </span>
           <span>
             {savedFeedback
-              ? '¡Guardado en tu Billetera!'
+              ? 'Guardado en tu Billetera'
               : movType === 'alcancia'
               ? 'Añadir Dinero en Alcancía'
               : 'Guardar Movimiento'}
@@ -476,8 +459,8 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
             onChange={(e) => setTitle(e.target.value)}
             placeholder={
               movType === 'alcancia'
-                ? 'Ej. Ahorro de la quincena...'
-                : 'Ej. Café frío, Netflix, Sueldo...'
+                ? 'Escribe el concepto de tu ahorro...'
+                : 'Escribe el nombre o concepto del movimiento...'
             }
             className={`w-full h-11 px-4 rounded-2xl text-[14px] focus:outline-none ${
               isDark
@@ -485,28 +468,6 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                 : 'bg-[#f0f4f8] text-[#171c1f] placeholder:text-[#777587] shadow-[inset_2px_2px_4px_rgba(15,23,42,0.08),inset_-2px_-2px_4px_rgba(255,255,255,0.9)]'
             }`}
           />
-        </div>
-
-        {/* Sugerencias rápidas */}
-        <div className="flex flex-wrap items-center gap-1.5">
-          {QUICK_SUGGESTIONS[movType].map((sug, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => {
-                setTitle(sug.title);
-                setAmountRaw(sug.amount);
-                setCategory(sug.cat);
-              }}
-              className={`px-2.5 py-1 rounded-full font-display text-[10px] font-bold transition-all active:scale-95 ${
-                isDark
-                  ? 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                  : 'bg-[#eaeef2] text-[#464555] hover:bg-[#e2dfff]'
-              }`}
-            >
-              + {sug.title}
-            </button>
-          ))}
         </div>
 
         <div>
@@ -519,7 +480,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                   key={cat.id}
                   type="button"
                   onClick={() => setCategory(cat.id)}
-                  className={`p-2 rounded-2xl flex flex-col items-center gap-1 border-2 transition-all active:scale-95 ${
+                  className={`p-2.5 rounded-2xl flex flex-col items-center gap-1.5 border-2 transition-all active:scale-95 ${
                     selected
                       ? 'border-[#635bff] bg-[#e2dfff]/50 dark:bg-[#635bff]/25'
                       : isDark
@@ -527,7 +488,18 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                       : 'border-transparent bg-[#f0f4f8]'
                   }`}
                 >
-                  <span className="text-lg">{cat.emoji}</span>
+                  <span
+                    className={`material-symbols-outlined text-[20px] ${
+                      selected
+                        ? 'text-[#493ee5] dark:text-[#c3c0ff]'
+                        : isDark
+                        ? 'text-slate-300'
+                        : 'text-[#464555]'
+                    }`}
+                    style={{ fontVariationSettings: selected ? "'FILL' 1" : "'FILL' 0" }}
+                  >
+                    {cat.icon}
+                  </span>
                   <span className="font-display text-[10px] font-bold truncate w-full text-center">
                     {cat.name.split(' ')[0]}
                   </span>

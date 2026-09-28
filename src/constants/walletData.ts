@@ -73,15 +73,12 @@ export function parseTypedCurrencyInput(
   const curr = CURRENCIES[currencyCode] || CURRENCIES.USD;
   if (!rawInput) return '';
 
-  // Remove thousand separators first
   const withoutThousands =
     curr.thousandSep === '.' ? rawInput.replace(/\./g, '') : rawInput.replace(/,/g, '');
 
-  // Convert currency decimal separator to canonical '.'
   const normalized =
     curr.decimalSep === ',' ? withoutThousands.replace(/,/g, '.') : withoutThousands;
 
-  // Keep only digits and at most one decimal point
   const cleaned = normalized.replace(/[^0-9.]/g, '');
   const parts = cleaned.split('.');
   const intPart = parts[0].replace(/^0+(?=\d)/, '');
@@ -130,7 +127,6 @@ const FEMALE_SVG_FALLBACK = `data:image/svg+xml;utf8,${encodeURIComponent(`
 </svg>
 `)}`;
 
-// Exact 3D Clay Lavender Bust matching screen.png (smooth matte 3D sphere head + connected neck + rounded bust floating above warm studio background)
 const STANDARD_3D_CLAY_BUST = `data:image/svg+xml;utf8,${encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <defs>
@@ -170,6 +166,7 @@ export const GENDER_DATA: Record<
   {
     key: GenderKey;
     label: string;
+    icon: string;
     emoji: string;
     img: string;
     fallbackSvg: string;
@@ -180,7 +177,8 @@ export const GENDER_DATA: Record<
   hombre: {
     key: 'hombre',
     label: 'Hombre',
-    emoji: '👨',
+    icon: 'man',
+    emoji: 'man',
     img: 'https://lh3.googleusercontent.com/aida/AEtjO1VPx4TjSBBgflaQ30TlXymkMANEGdaYEEEJqw5DJ37negCCUfEGnHW-8mqCo7y4E_1zxAwt-_ieXFvDRCGafXTBOJIXFTRSQPXcR4pqQQ7ZyetPay8_aeCHM-QH-Sh2-auK4I1qY0vNSQ_ZVIAo9UhUb-VTBwfx_NLO6dr7RVnzjVD53lr_6nEx91KB031S2KQbrDFtbEF_IuKLkxPkJkcMvaVGmO5APnLhgqdsFKGb5WUv3V19kaPwsbtZ',
     fallbackSvg: MALE_SVG_FALLBACK,
     title: 'Hombre',
@@ -189,7 +187,8 @@ export const GENDER_DATA: Record<
   mujer: {
     key: 'mujer',
     label: 'Mujer',
-    emoji: '👩',
+    icon: 'woman',
+    emoji: 'woman',
     img: 'https://lh3.googleusercontent.com/aida/AEtjO1X2gqYPpOEr_HHg8A6byZ9jGibhLVT394V_5dqrnr0TWMlZx2LGlUHo-7SsNd02IYzws-92tsLZWD1aOhzdbUDr6LxkLHZDKa0L5zZiZTPlCNdJvSvqhZ33Pfmt0pSJBk9cT4m9NGSGNjhVe7sm_aDdTb5xpHACzUFE0WXrYMoWeL5FNAJhui_2JlQlZUl4RQ-CSAdJFEzbpMojw9a1Q1VZOdmwcynzeTLykedTSj4Cx6ysHnDvhPs0uU-_',
     fallbackSvg: FEMALE_SVG_FALLBACK,
     title: 'Mujer',
@@ -198,7 +197,8 @@ export const GENDER_DATA: Record<
   otro: {
     key: 'otro',
     label: 'Otro',
-    emoji: '✨',
+    icon: 'person',
+    emoji: 'person',
     img: STANDARD_3D_CLAY_BUST,
     fallbackSvg: STANDARD_3D_CLAY_BUST,
     title: 'Estándar',
@@ -209,7 +209,8 @@ export const GENDER_DATA: Record<
 export const ONBOARDING_GOALS = [
   {
     id: 'hormiga',
-    emoji: '🔍',
+    icon: 'radar',
+    emoji: 'radar',
     title: 'Frenar Gastos Hormiga',
     subtitle: 'Cafés, suscripciones que olvidaste y antojos',
     badgeBg: 'bg-[#ffdadc] text-[#400010]',
@@ -218,7 +219,8 @@ export const ONBOARDING_GOALS = [
   },
   {
     id: 'metas',
-    emoji: '🎯',
+    icon: 'flag',
+    emoji: 'flag',
     title: 'Metas y Presupuesto',
     subtitle: 'Fondos de emergencia, viajes y techos de gasto',
     badgeBg: 'bg-[#62fae3] text-[#00201c]',
@@ -227,7 +229,8 @@ export const ONBOARDING_GOALS = [
   },
   {
     id: 'flujo',
-    emoji: '📊',
+    icon: 'monitoring',
+    emoji: 'monitoring',
     title: 'Flujo de Caja Diario',
     subtitle: 'Monitorear ingresos variables y balance neto',
     badgeBg: 'bg-[#eaeef2] text-[#171c1f]',
@@ -236,7 +239,8 @@ export const ONBOARDING_GOALS = [
   },
   {
     id: 'privacidad',
-    emoji: '🛡️',
+    icon: 'shield_lock',
+    emoji: 'shield_lock',
     title: 'Finanzas 100% Privadas',
     subtitle: 'Tus datos se guardan solo en tu teléfono, sin cuentas ni servidores',
     badgeBg: 'bg-[#e2dfff] text-[#493ee5]',
@@ -245,7 +249,8 @@ export const ONBOARDING_GOALS = [
   },
   {
     id: 'simulacion',
-    emoji: '⚡',
+    icon: 'bolt',
+    emoji: 'bolt',
     title: 'Registro Rápido y Simulación',
     subtitle: 'Calcula el impacto antes de pasar tu tarjeta',
     badgeBg: 'bg-[#eaeef2] text-[#171c1f]',
@@ -259,7 +264,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'cafe',
     name: 'Café & Antojos',
     icon: 'local_cafe',
-    emoji: '☕',
+    emoji: 'local_cafe',
     defaultType: 'hormiga',
     bgLight: 'bg-[#ffe4e6]',
     textLight: 'text-[#9f1239]',
@@ -271,7 +276,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'streaming',
     name: 'Streaming & Apps',
     icon: 'smart_display',
-    emoji: '🎬',
+    emoji: 'smart_display',
     defaultType: 'hormiga',
     bgLight: 'bg-[#f3e8ff]',
     textLight: 'text-[#6b21a8]',
@@ -283,7 +288,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'delivery',
     name: 'Delivery & Snacks',
     icon: 'delivery_dining',
-    emoji: '🛵',
+    emoji: 'delivery_dining',
     defaultType: 'hormiga',
     bgLight: 'bg-[#ffedd5]',
     textLight: 'text-[#9a3412]',
@@ -295,7 +300,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'ocio',
     name: 'Ocio & Juegos',
     icon: 'sports_esports',
-    emoji: '🎮',
+    emoji: 'sports_esports',
     defaultType: 'hormiga',
     bgLight: 'bg-[#fef9c3]',
     textLight: 'text-[#854d0e]',
@@ -307,7 +312,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'vivienda',
     name: 'Vivienda & Renta',
     icon: 'home',
-    emoji: '🏠',
+    emoji: 'home',
     defaultType: 'fijo',
     bgLight: 'bg-[#e2dfff]',
     textLight: 'text-[#321ed2]',
@@ -319,7 +324,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'supermercado',
     name: 'Supermercado',
     icon: 'shopping_cart',
-    emoji: '🛒',
+    emoji: 'shopping_cart',
     defaultType: 'fijo',
     bgLight: 'bg-[#dbeafe]',
     textLight: 'text-[#1e40af]',
@@ -331,7 +336,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'servicios',
     name: 'Luz, Agua & Fibra',
     icon: 'bolt',
-    emoji: '💡',
+    emoji: 'bolt',
     defaultType: 'fijo',
     bgLight: 'bg-[#e0f2fe]',
     textLight: 'text-[#0369a1]',
@@ -343,7 +348,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'transporte',
     name: 'Transporte & Auto',
     icon: 'directions_car',
-    emoji: '🚗',
+    emoji: 'directions_car',
     defaultType: 'fijo',
     bgLight: 'bg-[#f1f5f9]',
     textLight: 'text-[#334155]',
@@ -354,8 +359,8 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
   salud: {
     id: 'salud',
     name: 'Salud & Gym',
-    icon: 'favorite',
-    emoji: '💊',
+    icon: 'fitness_center',
+    emoji: 'fitness_center',
     defaultType: 'fijo',
     bgLight: 'bg-[#fce7f3]',
     textLight: 'text-[#9d174d]',
@@ -367,7 +372,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'sueldo',
     name: 'Sueldo & Nómina',
     icon: 'payments',
-    emoji: '💼',
+    emoji: 'payments',
     defaultType: 'ingreso',
     bgLight: 'bg-[#62fae3]',
     textLight: 'text-[#005047]',
@@ -378,8 +383,8 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
   freelance: {
     id: 'freelance',
     name: 'Freelance & Extra',
-    icon: 'Rocket_Launch',
-    emoji: '⚡',
+    icon: 'rocket_launch',
+    emoji: 'rocket_launch',
     defaultType: 'ingreso',
     bgLight: 'bg-[#ccfbf1]',
     textLight: 'text-[#115e59]',
@@ -391,7 +396,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'alcancia',
     name: 'Alcancía de Ahorro',
     icon: 'savings',
-    emoji: '🐷',
+    emoji: 'savings',
     defaultType: 'alcancia',
     bgLight: 'bg-[#e2dfff]',
     textLight: 'text-[#321ed2]',
@@ -403,7 +408,7 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'otros',
     name: 'Otros',
     icon: 'category',
-    emoji: '📦',
+    emoji: 'category',
     defaultType: 'fijo',
     bgLight: 'bg-[#eaeef2]',
     textLight: 'text-[#464555]',
@@ -425,53 +430,4 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   configuredAt: new Date().toISOString(),
 };
 
-export const DEMO_MOVEMENTS: Movement[] = [
-  {
-    id: 'mov-1',
-    title: 'Sueldo Mensual',
-    amount: 3850.0,
-    type: 'ingreso',
-    category: 'sueldo',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 72).toISOString(),
-  },
-  {
-    id: 'mov-2',
-    title: 'Caramel Macchiato & Croissant',
-    amount: 9.8,
-    type: 'hormiga',
-    category: 'cafe',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
-  },
-  {
-    id: 'mov-3',
-    title: 'Netflix Ultra HD + Spotify Duo',
-    amount: 28.99,
-    type: 'hormiga',
-    category: 'streaming',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 14).toISOString(),
-  },
-  {
-    id: 'mov-4',
-    title: 'Renta Apartamento & Admin',
-    amount: 980.0,
-    type: 'fijo',
-    category: 'vivienda',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 48).toISOString(),
-  },
-  {
-    id: 'mov-5',
-    title: 'Burger Nocturna Delivery',
-    amount: 24.5,
-    type: 'hormiga',
-    category: 'delivery',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 26).toISOString(),
-  },
-  {
-    id: 'mov-6',
-    title: 'Compra Quincenal Supermercado',
-    amount: 265.4,
-    type: 'fijo',
-    category: 'supermercado',
-    date: new Date(Date.now() - 1000 * 60 * 60 * 52).toISOString(),
-  },
-];
+export const DEMO_MOVEMENTS: Movement[] = [];

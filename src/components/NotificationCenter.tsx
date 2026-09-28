@@ -2,6 +2,9 @@ import React from 'react';
 import { ActiveTab, AppNotification } from '../types/wallet';
 import { WalletClayLogo } from './ClayAvatar';
 
+const resolveNotifIcon = (val?: string) =>
+  val && /^[a-z0-9_]+$/.test(val) ? val : 'notifications_active';
+
 // Pleasant Web Audio API Chime (Zero external audio dependencies, works offline)
 export function playNotificationChime(enabled = true) {
   if (!enabled || typeof window === 'undefined') return;
@@ -127,20 +130,27 @@ export const FloatingNotificationToasts: React.FC<FloatingNotificationToastsProp
           </div>
 
           {/* Native Notification Content Row */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-start gap-2.5">
             <div className="flex-1 min-w-0">
-              <p className="font-display text-[12.5px] font-extrabold leading-tight truncate">
+              <p className="font-display text-[12.5px] font-extrabold leading-snug">
                 {toast.title}
               </p>
               <p
-                className={`text-[11.5px] leading-snug truncate mt-0.5 ${
+                className={`text-[11.5px] leading-snug line-clamp-2 mt-0.5 ${
                   isDark ? 'text-slate-300' : 'text-[#464555]'
                 }`}
               >
                 {toast.body}
               </p>
             </div>
-            <span className="text-lg shrink-0">{toast.emoji}</span>
+            <div className="w-8 h-8 rounded-xl bg-[#e2dfff]/70 dark:bg-[#635bff]/25 text-[#493ee5] dark:text-[#c3c0ff] flex items-center justify-center shrink-0 mt-0.5">
+              <span
+                className="material-symbols-outlined text-[18px]"
+                style={{ fontVariationSettings: "'FILL' 1" }}
+              >
+                {resolveNotifIcon(toast.emoji)}
+              </span>
+            </div>
           </div>
         </div>
       ))}
@@ -206,7 +216,9 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
                 isDark ? 'bg-[#1b202c]' : 'bg-white shadow-sm'
               }`}
             >
-              <span className="text-3xl">🔔</span>
+              <div className="w-12 h-12 rounded-2xl bg-[#e2dfff]/70 text-[#493ee5] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">notifications_none</span>
+              </div>
               <p className="font-display text-[14px] font-extrabold">Sin notificaciones</p>
             </div>
           ) : (
@@ -235,7 +247,11 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
                       : 'bg-white hover:bg-[#f0f4f8] shadow-xs'
                   }`}
                 >
-                  <span className="text-xl shrink-0">{n.emoji}</span>
+                  <div className="w-9 h-9 rounded-xl bg-[#e2dfff]/70 dark:bg-[#635bff]/20 text-[#493ee5] dark:text-[#c3c0ff] flex items-center justify-center shrink-0">
+                    <span className="material-symbols-outlined text-[18px]">
+                      {resolveNotifIcon(n.emoji)}
+                    </span>
+                  </div>
                   <div className="flex-1 min-w-0">
                     <span className="font-display text-[12.5px] font-extrabold block truncate">
                       {n.title}

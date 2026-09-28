@@ -31,14 +31,14 @@ import {
 } from './types/wallet';
 
 const STORAGE_KEYS = {
-  PROFILE: 'flickwallet_user_profile_v3',
-  MOVEMENTS: 'flickwallet_movements_v3',
-  GOALS: 'flickwallet_savings_goals_v3',
-  REMINDERS: 'flickwallet_payment_reminders_v3',
-  NOTIFICATIONS: 'flickwallet_notifications_v3',
-  HIDE_BALANCE: 'flickwallet_hide_balance_v3',
-  DARK_MODE: 'flickwallet_dark_mode_v3',
-  ONBOARDED: 'flickwallet_onboarding_completed_v3',
+  PROFILE: 'flickwallet_user_profile_v4',
+  MOVEMENTS: 'flickwallet_movements_v4',
+  GOALS: 'flickwallet_savings_goals_v4',
+  REMINDERS: 'flickwallet_payment_reminders_v4',
+  NOTIFICATIONS: 'flickwallet_notifications_v4',
+  HIDE_BALANCE: 'flickwallet_hide_balance_v4',
+  DARK_MODE: 'flickwallet_dark_mode_v4',
+  ONBOARDED: 'flickwallet_onboarding_completed_v4',
 };
 
 export default function App() {
@@ -272,9 +272,9 @@ export default function App() {
 
     if (pending.length === 0) {
       handleTriggerNotification({
-        title: '🎉 ¡Estás al día con tus pagos!',
+        title: 'Estás al día con tus pagos',
         body: 'No tienes suscripciones, arriendo, gym ni deudas pendientes por pagar en este momento.',
-        emoji: '✅',
+        emoji: 'check_circle',
         accent: 'mint',
         actionTab: 'pagos',
         actionLabel: 'Ver calendario',
@@ -289,17 +289,17 @@ export default function App() {
     handleTriggerNotification({
       title:
         diff < 0
-          ? `⚠️ Pago vencido: ${target.title}`
+          ? `Pago vencido: ${target.title}`
           : diff === 0
-          ? `🔔 ¡Hoy vence ${target.title}!`
-          : `📅 Próximo pago: ${target.title} (Día ${target.dayOfMonth})`,
+          ? `Hoy vence ${target.title}`
+          : `Próximo pago: ${target.title} (Día ${target.dayOfMonth})`,
       body: `Recuerda tu compromiso de ${curr.symbol}${formatCurrencyAmount(
         target.amount,
         curr.code
       )} ${curr.code}. Tienes ${pending.length} ${
         pending.length === 1 ? 'pago pendiente' : 'pagos pendientes'
       } este mes.`,
-      emoji: target.emoji || '📅',
+      emoji: 'event_repeat',
       accent: diff < 0 ? 'rose' : diff <= 3 ? 'amber' : 'indigo',
       actionTab: 'pagos',
       actionLabel: 'Gestionar Pagos',
@@ -326,14 +326,14 @@ export default function App() {
         handleTriggerNotification({
           title:
             diff < 0
-              ? `⚠️ Pago pendiente: ${first.title}`
+              ? `Pago pendiente: ${first.title}`
               : diff === 0
-              ? `🔔 ¡Hoy vence ${first.title}!`
-              : `📅 ${first.title} vence en ${diff} días`,
+              ? `Hoy vence ${first.title}`
+              : `${first.title} vence en ${diff} días`,
           body: `Monto: ${curr.symbol}${formatCurrencyAmount(first.amount, curr.code)} ${
             curr.code
           }. Toca para marcarlo como pagado.`,
-          emoji: first.emoji || '📅',
+          emoji: 'event_repeat',
           accent: diff < 0 ? 'rose' : 'amber',
           actionTab: 'pagos',
           actionLabel: 'Ver Pagos',
@@ -363,12 +363,12 @@ export default function App() {
     };
     setSavingsGoals((prev) => [...prev, created]);
     handleTriggerNotification({
-      title: `${created.emoji} ¡Alcancía "${created.name}" creada!`,
+      title: `Alcancía "${created.name}" creada`,
       body: `Tu nueva meta es ahorrar ${curr.symbol}${formatCurrencyAmount(
         created.targetAmount,
         curr.code
       )} ${curr.code}.`,
-      emoji: created.emoji,
+      emoji: 'savings',
       accent: 'mint',
       actionTab: 'alcancia',
       actionLabel: 'Ver Alcancía',
@@ -397,15 +397,15 @@ export default function App() {
       const reached = nextSaved >= targetGoal.targetAmount;
       handleTriggerNotification({
         title: reached
-          ? `🎉 ¡Meta lograda en "${targetGoal.name}"!`
-          : `🐷 Abono guardado en "${targetGoal.name}"`,
+          ? `Meta lograda en "${targetGoal.name}"`
+          : `Abono guardado en "${targetGoal.name}"`,
         body: reached
-          ? `¡Felicidades! Completaste tu meta de ${curr.symbol}${formatCurrencyAmount(
+          ? `Completaste tu meta de ${curr.symbol}${formatCurrencyAmount(
               targetGoal.targetAmount,
               curr.code
             )} ${curr.code}.`
           : `Sumaste ${curr.symbol}${formatCurrencyAmount(amount, curr.code)} a tu alcancía.`,
-        emoji: reached ? '🏆' : targetGoal.emoji || '🐷',
+        emoji: reached ? 'emoji_events' : 'savings',
         accent: 'mint',
       });
     }
@@ -881,6 +881,7 @@ export default function App() {
               reminders={reminders}
               onUpdateProfile={handleUpdateProfile}
               onLockNow={() => setIsLocked(true)}
+              onResetAllApp={handleResetAllApp}
               onTriggerNotification={handleTriggerNotification}
               isDark={isDark}
               onToggleDark={() => setIsDark((d) => !d)}

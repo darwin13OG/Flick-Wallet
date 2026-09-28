@@ -225,7 +225,12 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                         : 'border-transparent bg-[#f0f4f8] shadow-[0_4px_10px_rgba(15,23,42,0.04),inset_1px_1px_3px_rgba(255,255,255,0.9)] hover:bg-[#eaeef2]'
                     }`}
                   >
-                    <span className="text-2xl mb-1">{item.emoji}</span>
+                    <span
+                      className="material-symbols-outlined text-[24px] mb-1 text-[#493ee5] dark:text-[#c3c0ff]"
+                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    >
+                      {item.icon}
+                    </span>
                     <span className="font-display text-[13px] leading-tight font-bold">
                       {item.label}
                     </span>

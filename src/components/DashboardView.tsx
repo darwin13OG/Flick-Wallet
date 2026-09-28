@@ -348,8 +348,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               } ${cardCls}`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-12 h-12 rounded-2xl bg-[#62fae3]/40 text-[#00201c] flex items-center justify-center text-2xl shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
-                  🐷
+                <div className="w-12 h-12 rounded-2xl bg-[#62fae3]/40 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
+                  <span
+                    className="material-symbols-outlined text-[24px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    savings
+                  </span>
                 </div>
                 <div className="min-w-0">
                   <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3] block">
@@ -378,8 +383,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               } ${cardCls}`}
             >
               <div className="flex items-center gap-3.5 min-w-0">
-                <div className="w-12 h-12 rounded-2xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center text-2xl shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
-                  📅
+                <div className="w-12 h-12 rounded-2xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
+                  <span
+                    className="material-symbols-outlined text-[24px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    event_repeat
+                  </span>
                 </div>
                 <div className="min-w-0">
                   <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#493ee5] dark:text-[#c3c0ff] block">
@@ -405,8 +415,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className={`rounded-3xl p-6 flex flex-col gap-4 ${cardCls}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-13 h-13 shrink-0 rounded-2xl bg-[#ffdadc] text-[#400010] flex items-center justify-center text-2xl shadow-[0_6px_14px_rgba(164,47,70,0.2),inset_2px_2px_4px_rgba(255,255,255,0.85)]">
-                  🐜
+                <div className="w-13 h-13 shrink-0 rounded-2xl bg-[#ffdadc] text-[#400010] flex items-center justify-center shadow-[0_6px_14px_rgba(164,47,70,0.2),inset_2px_2px_4px_rgba(255,255,255,0.85)]">
+                  <span
+                    className="material-symbols-outlined text-[25px]"
+                    style={{ fontVariationSettings: "'FILL' 1" }}
+                  >
+                    bug_report
+                  </span>
                 </div>
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <h3 className="font-display text-[16px] font-extrabold leading-snug">
@@ -571,7 +586,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="text-base">{cat.emoji}</span>
+                      <span className="material-symbols-outlined text-[16px] text-[#a42f46] dark:text-[#ffb2b9]">
+                        {cat.icon}
+                      </span>
                       <span className="font-display text-[11px] font-bold truncate">
                         {cat.name.split(' ')[0]}
                       </span>
@@ -611,10 +628,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           >
             {[
               { id: 'all', label: 'Todos' },
-              { id: 'hormiga', label: '🐜 Horm.' },
-              { id: 'fijo', label: '🏠 Fijos' },
-              { id: 'ingreso', label: '💰 Ingr.' },
-              { id: 'alcancia', label: '🐷 Alc.' },
+              { id: 'hormiga', label: 'Hormiga' },
+              { id: 'fijo', label: 'Fijos' },
+              { id: 'ingreso', label: 'Ingresos' },
+              { id: 'alcancia', label: 'Alcancía' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -666,7 +683,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div
               className={`rounded-3xl p-8 text-center flex flex-col items-center gap-2 ${cardCls}`}
             >
-              <span className="text-3xl">✨</span>
+              <div className="w-12 h-12 rounded-2xl bg-[#e2dfff]/60 text-[#493ee5] flex items-center justify-center">
+                <span className="material-symbols-outlined text-[24px]">receipt_long</span>
+              </div>
               <p className="font-display text-[15px] font-bold">Sin movimientos registrados</p>
               <p className={`text-[12px] ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
                 Pulsa el botón &ldquo;+&rdquo; para registrar un gasto, ingreso o ahorro en
@@ -684,66 +703,73 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 return (
                   <div
                     key={mov.id}
-                    className={`rounded-2xl p-3.5 flex items-center justify-between gap-3 ${cardCls}`}
+                    className={`rounded-2xl p-4 flex flex-col gap-2.5 ${cardCls}`}
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div
-                        className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center text-lg shadow-[0_4px_8px_rgba(15,23,42,0.06),inset_1px_1px_2px_rgba(255,255,255,0.8)] ${
-                          isDark
-                            ? `${cat.bgDark} ${cat.textDark}`
-                            : `${cat.bgLight} ${cat.textLight}`
-                        }`}
-                      >
-                        {cat.emoji}
-                      </div>
-                      <div className="flex flex-col min-w-0">
-                        <span className="font-display text-[14px] font-bold truncate">
-                          {mov.title}
-                        </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0 flex-1">
                         <div
-                          className={`flex items-center gap-1.5 text-[11px] truncate ${
-                            isDark ? 'text-slate-400' : 'text-[#464555]'
+                          className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center shadow-[0_4px_8px_rgba(15,23,42,0.06),inset_1px_1px_2px_rgba(255,255,255,0.8)] ${
+                            isDark
+                              ? `${cat.bgDark} ${cat.textDark}`
+                              : `${cat.bgLight} ${cat.textLight}`
                           }`}
                         >
-                          <span>{cat.name}</span>
-                          <span aria-hidden="true">·</span>
-                          <span>
-                            {isIncome
-                              ? 'Ingreso'
-                              : isAlcancia
-                              ? 'Alcancía 🐷'
-                              : isHormiga
-                              ? 'Hormiga 🐜'
-                              : 'Gasto Fijo'}
+                          <span
+                            className="material-symbols-outlined text-[20px]"
+                            style={{ fontVariationSettings: "'FILL' 1" }}
+                          >
+                            {cat.icon}
                           </span>
-                          <span aria-hidden="true">·</span>
-                          <span>{formatRelativeDate(mov.date)}</span>
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="font-display text-[14.5px] font-bold leading-snug break-words">
+                            {mov.title}
+                          </span>
+                          <div
+                            className={`flex items-center gap-1.5 flex-wrap text-[11px] mt-0.5 ${
+                              isDark ? 'text-slate-400' : 'text-[#464555]'
+                            }`}
+                          >
+                            <span>{cat.name}</span>
+                            <span aria-hidden="true">·</span>
+                            <span>
+                              {isIncome
+                                ? 'Ingreso'
+                                : isAlcancia
+                                ? 'Alcancía'
+                                : isHormiga
+                                ? 'Hormiga'
+                                : 'Gasto Fijo'}
+                            </span>
+                            <span aria-hidden="true">·</span>
+                            <span>{formatRelativeDate(mov.date)}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span
-                        className={`font-display text-[15px] font-extrabold tabular-nums ${
-                          isIncome
-                            ? 'text-[#006b5f] dark:text-[#62fae3]'
-                            : isAlcancia
-                            ? 'text-[#493ee5] dark:text-[#c3c0ff]'
-                            : isHormiga
-                            ? 'text-[#a42f46] dark:text-[#ffb2b9]'
-                            : ''
-                        }`}
-                      >
-                        {hideBalance ? `${curr.symbol} •••` : `${curr.symbol}${fmt(mov.amount)}`}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => onDeleteMovement(mov.id)}
-                        title="Eliminar movimiento"
-                        className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">delete</span>
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span
+                          className={`font-display text-[15px] font-extrabold tabular-nums ${
+                            isIncome
+                              ? 'text-[#006b5f] dark:text-[#62fae3]'
+                              : isAlcancia
+                              ? 'text-[#493ee5] dark:text-[#c3c0ff]'
+                              : isHormiga
+                              ? 'text-[#a42f46] dark:text-[#ffb2b9]'
+                              : ''
+                          }`}
+                        >
+                          {hideBalance ? `${curr.symbol} •••` : `${curr.symbol}${fmt(mov.amount)}`}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteMovement(mov.id)}
+                          title="Eliminar movimiento"
+                          className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );

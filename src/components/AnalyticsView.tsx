@@ -304,7 +304,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   </span>
                 </div>
                 <div className="p-3 rounded-2xl bg-white/12 backdrop-blur-xs">
-                  <span className="text-[11px] text-white/80 block">Guardado en Alcancías 🐷</span>
+                  <span className="text-[11px] text-white/80 block">Guardado en Alcancías</span>
                   <span className="font-display text-[17px] font-extrabold text-white tabular-nums">
                     {curr.symbol}
                     {fmt(analytics.alcanciaSaved)} {curr.code}
@@ -360,7 +360,12 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
                   {activeItem ? (
                     <>
-                      <span className="text-xl">{activeItem.meta.emoji}</span>
+                      <span
+                        className="material-symbols-outlined text-[22px] text-[#493ee5] dark:text-[#c3c0ff]"
+                        style={{ fontVariationSettings: "'FILL' 1" }}
+                      >
+                        {activeItem.meta.icon}
+                      </span>
                       <span className="font-display text-[20px] font-extrabold tabular-nums">
                         {activeItem.percent}%
                       </span>
@@ -406,7 +411,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 >
                   <div className="flex items-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-[#fb7185]" />
-                    <span className="font-display text-[12px] font-bold">Gastos Hormiga 🐜</span>
+                    <span className="font-display text-[12px] font-bold">Gastos Hormiga</span>
                   </div>
                   <span className="font-display text-[14px] font-extrabold text-[#a42f46] dark:text-[#ffb2b9] tabular-nums">
                     {curr.symbol}
@@ -467,7 +472,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="text-lg">{item.meta.emoji}</span>
+                        <span className="material-symbols-outlined text-[19px] text-[#493ee5] dark:text-[#c3c0ff]">
+                          {item.meta.icon}
+                        </span>
                         <span className="font-display text-[13px] font-bold">{item.meta.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -525,7 +532,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="text-lg">{cat.emoji}</span>
+                        <span className="material-symbols-outlined text-[19px] text-[#493ee5] dark:text-[#c3c0ff]">
+                          {cat.icon}
+                        </span>
                         <div className="min-w-0">
                           <span className="font-display text-[13px] font-bold block truncate">
                             {mov.title}

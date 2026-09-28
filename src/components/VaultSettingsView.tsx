@@ -14,6 +14,7 @@ interface VaultSettingsViewProps {
   reminders: PaymentReminder[];
   onUpdateProfile: (updated: Partial<UserProfile>) => void;
   onLockNow: () => void;
+  onResetAllApp: () => void;
   onTriggerNotification: (opts: {
     title: string;
     body: string;
@@ -31,6 +32,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
   reminders,
   onUpdateProfile,
   onLockNow,
+  onResetAllApp,
   onTriggerNotification,
   isDark,
   onToggleDark,
@@ -40,6 +42,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
 
   const [customUrlInput, setCustomUrlInput] = useState('');
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [confirmingReset, setConfirmingReset] = useState(false);
   const [incomeRaw, setIncomeRaw] = useState(
     profile.monthlyIncome && profile.monthlyIncome > 0 ? String(profile.monthlyIncome) : ''
   );
@@ -93,24 +96,14 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
         body: `Vence el día ${firstReminder.dayOfMonth} · ${curr.symbol}${fmt(
           firstReminder.amount
         )} ${curr.code}`,
-        emoji: firstReminder.emoji || '📅',
+        emoji: 'event_repeat',
         actionTab: 'pagos',
       });
     } else {
-      const sampleAmt =
-        curr.code === 'COP'
-          ? 85000
-          : curr.code === 'CLP'
-          ? 25000
-          : curr.code === 'ARS'
-          ? 18000
-          : curr.code === 'MXN'
-          ? 550
-          : 29;
       onTriggerNotification({
-        title: 'Pago próximo: Mensualidad Gym',
-        body: `Vence mañana · ${curr.symbol}${fmt(sampleAmt)} ${curr.code}`,
-        emoji: '🏋️',
+        title: 'Notificación de prueba activa',
+        body: `Tus alertas de pagos y alcancías están listas en ${curr.code}.`,
+        emoji: 'notifications_active',
         actionTab: 'pagos',
       });
     }
@@ -454,7 +447,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                 className="font-display text-[12px] font-bold"
                 htmlFor="settings-hormiga-limit"
               >
-                Tope Gastos Hormiga 🐜 ({curr.code})
+                Tope Gastos Hormiga ({curr.code})
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 font-display text-[15px] font-bold text-slate-400">
@@ -471,7 +464,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                     const val = parseFloat(canonical);
                     onUpdateProfile({ hormigaLimit: !isNaN(val) && val >= 0 ? val : 0 });
                   }}
-                  placeholder="Ej. 150.000"
+                  placeholder="0"
                   className={`w-full h-11 pl-10 pr-4 rounded-2xl font-display text-[15px] font-bold tabular-nums focus:outline-none ${inputWell}`}
                 />
               </div>
@@ -569,6 +562,44 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                   Activar PIN
                 </button>
               </form>
+            )}
+          </div>
+
+          {/* Botón al final de Ajustes para Reiniciar Todo */}
+          <div className={`rounded-3xl p-5 flex flex-col gap-3 ${cardCls}`}>
+            {!confirmingReset ? (
+              <button
+                type="button"
+                onClick={() => setConfirmingReset(true)}
+                className="w-full py-3.5 px-4 rounded-2xl bg-[#ffdad6] text-[#93000a] dark:bg-rose-500/20 dark:text-rose-200 font-display text-[13px] font-extrabold flex items-center justify-center gap-2 transition-all active:scale-98"
+              >
+                <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+                <span>Reiniciar Todo</span>
+              </button>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <p className="font-display text-[12px] font-bold text-center text-rose-500 dark:text-rose-300">
+                  ¿Seguro que deseas borrar todos tus datos y reiniciar la app desde cero?
+                </p>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmingReset(false)}
+                    className={`py-2.5 rounded-xl font-display text-[12px] font-bold ${
+                      isDark ? 'bg-[#12161f] text-slate-300' : 'bg-[#f0f4f8] text-[#464555]'
+                    }`}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onResetAllApp}
+                    className="py-2.5 rounded-xl bg-[#e11d48] text-white font-display text-[12px] font-extrabold active:scale-95"
+                  >
+                    Sí, reiniciar todo
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
