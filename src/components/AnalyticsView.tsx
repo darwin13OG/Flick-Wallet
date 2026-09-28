@@ -89,17 +89,21 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
     const baseIncome = (profile.monthlyIncome || 0) + income;
     const totalExpenses = fixed + hormiga;
     const savings = Math.max(0, baseIncome - totalExpenses);
-    const savingsRate = baseIncome > 0 ? Math.round((savings / baseIncome) * 100) : 0;
+    const hasActivity = activeMovements.length > 0;
+    const savingsRate =
+      hasActivity && baseIncome > 0 ? Math.round((savings / baseIncome) * 100) : 0;
     const hormigaRatio = baseIncome > 0 ? (hormiga / baseIncome) * 100 : 0;
+    const alcanciaRatio = baseIncome > 0 ? (alcanciaSaved / baseIncome) * 100 : 0;
 
-    // Score Financiero
-    const rawScore =
-      baseIncome === 0 && totalExpenses === 0
-        ? 0
-        : Math.round(
-            550 + Math.min(savingsRate * 5.5, 350) - Math.min(hormigaRatio * 14, 250)
-          );
-    const financialScore = rawScore === 0 ? 0 : Math.max(320, Math.min(980, rawScore));
+    // Desglose real del Score FlickWallet (escala 300 - 980 cuando hay actividad)
+    const savingsBonus = hasActivity ? Math.round(Math.min(savingsRate * 2.8, 280)) : 0;
+    const alcanciaBonus = hasActivity ? Math.round(Math.min(alcanciaRatio * 5, 100)) : 0;
+    const hormigaPenalty = hasActivity ? Math.round(Math.min(hormigaRatio * 14, 280)) : 0;
+
+    const rawScore = !hasActivity
+      ? 0
+      : Math.round(550 + savingsBonus + alcanciaBonus - hormigaPenalty);
+    const financialScore = !hasActivity ? 0 : Math.max(300, Math.min(980, rawScore));
 
     const categoryBreakdown = Object.entries(catTotals)
       .map(([id, amt]) => {
@@ -115,6 +119,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       .sort((a, b) => b.amount - a.amount);
 
     return {
+      hasActivity,
       baseIncome,
       totalExpenses,
       fixed,
@@ -122,6 +127,9 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       alcanciaSaved,
       savings,
       savingsRate,
+      savingsBonus,
+      alcanciaBonus,
+      hormigaPenalty,
       financialScore,
       categoryBreakdown,
     };
@@ -246,18 +254,21 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
       <div className="flex flex-col lg:grid lg:grid-cols-12 lg:gap-6 lg:items-start gap-5">
         <div className="lg:col-span-6 flex flex-col gap-5">
           {/* 1. Indicador de Score Financiero y Métricas de Ahorro */}
-          <div className="rounded-3xl p-6 bg-gradient-to-br from-[#493ee5] via-[#635bff] to-[#321ed2] text-white shadow-[0_20px_36px_-8px_rgba(99,91,255,0.45),inset_3px_4px_7px_rgba(255,255,255,0.45),inset_-4px_-4px_8px_rgba(15,0,105,0.4)] flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <span className="font-display text-[11px] font-extrabold uppercase tracking-wider text-[#62fae3]">
+          <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-[#493ee5] via-[#635bff] to-[#321ed2] text-white shadow-[0_20px_36px_-8px_rgba(99,91,255,0.45),inset_3px_4px_7px_rgba(255,255,255,0.45),inset_-4px_-4px_8px_rgba(15,0,105,0.4)] flex flex-col gap-4">
+            {/* Cabecera alineada sin partir etiquetas en dos líneas */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <span className="font-display text-[10px] sm:text-[11px] font-extrabold uppercase tracking-wider text-[#62fae3] block truncate">
                   Salud Financiera · {formatMonthLabel(selectedMonth)}
                 </span>
-                <h2 className="font-display text-[22px] font-extrabold leading-tight">
+                <h2 className="font-display text-[20px] sm:text-[22px] font-extrabold leading-tight mt-0.5">
                   Score FlickWallet
                 </h2>
               </div>
-              <span className="px-3 py-1 rounded-full bg-[#62fae3] text-[#00201c] font-display text-[11px] font-extrabold shadow-sm">
-                {analytics.financialScore >= 780
+              <span className="px-3 py-1 rounded-full bg-[#62fae3] text-[#00201c] font-display text-[11px] font-extrabold shadow-sm whitespace-nowrap shrink-0">
+                {!analytics.hasActivity
+                  ? 'Sin Movimientos'
+                  : analytics.financialScore >= 780
                   ? 'Nivel Excelente'
                   : analytics.financialScore >= 620
                   ? 'Nivel Estable'
@@ -265,9 +276,10 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
               </span>
             </div>
 
-            <div className="flex items-center gap-5">
+            {/* Bloque Central: Anillo + Tarjetas organizadas con jerarquía limpia en celular */}
+            <div className="flex items-center gap-4 bg-white/10 rounded-2xl p-3.5 sm:p-4 backdrop-blur-xs">
               {/* Circular Score SVG Ring */}
-              <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+              <div className="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 flex items-center justify-center">
                 <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
                   <circle
                     cx="60"
@@ -289,29 +301,61 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-                  <span className="font-display text-[26px] font-extrabold leading-none tabular-nums">
+                  <span className="font-display text-[24px] sm:text-[26px] font-extrabold leading-none tabular-nums">
                     {analytics.financialScore}
                   </span>
-                  <span className="font-display text-[10px] font-bold text-white/75">
+                  <span className="font-display text-[9.5px] font-bold text-white/75 mt-0.5">
                     / 1000 pts
                   </span>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2.5 flex-1">
-                <div className="p-3 rounded-2xl bg-white/12 backdrop-blur-xs">
-                  <span className="text-[11px] text-white/80 block">Tasa de Ahorro del Mes</span>
-                  <span className="font-display text-[20px] font-extrabold text-[#62fae3] tabular-nums">
-                    {analytics.savingsRate}% ({`${curr.symbol}${fmt(analytics.savings)}`})
+              {/* Métricas apiladas con montos debajo del porcentaje para evitar cortes en móvil */}
+              <div className="flex flex-col gap-2.5 flex-1 min-w-0">
+                <div className="p-2.5 sm:p-3 rounded-xl bg-black/15">
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="text-[11px] text-white/80 font-medium">Tasa de Ahorro</span>
+                    <span className="font-display text-[17px] sm:text-[19px] font-extrabold text-[#62fae3] leading-none tabular-nums">
+                      {analytics.savingsRate}%
+                    </span>
+                  </div>
+                  <span className="font-display text-[12px] font-bold text-white/90 block mt-1 tabular-nums truncate">
+                    Libre: {curr.symbol}
+                    {fmt(analytics.savings)} {curr.code}
                   </span>
                 </div>
-                <div className="p-3 rounded-2xl bg-white/12 backdrop-blur-xs">
-                  <span className="text-[11px] text-white/80 block">Guardado en Alcancías</span>
-                  <span className="font-display text-[17px] font-extrabold text-white tabular-nums">
+
+                <div className="p-2.5 sm:p-3 rounded-xl bg-black/15">
+                  <span className="text-[11px] text-white/80 block font-medium">
+                    Guardado en Alcancías
+                  </span>
+                  <span className="font-display text-[14px] sm:text-[16px] font-extrabold text-white block mt-0.5 tabular-nums truncate">
                     {curr.symbol}
                     {fmt(analytics.alcanciaSaved)} {curr.code}
                   </span>
                 </div>
+              </div>
+            </div>
+
+            {/* Desglose transparente de cómo se calcula el Score */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+              <div className="py-2 px-1.5 rounded-xl bg-white/12">
+                <span className="text-[10px] text-white/80 block truncate">Ahorro Libre</span>
+                <span className="font-display text-[12px] font-extrabold text-[#62fae3] tabular-nums">
+                  +{analytics.savingsBonus} pts
+                </span>
+              </div>
+              <div className="py-2 px-1.5 rounded-xl bg-white/12">
+                <span className="text-[10px] text-white/80 block truncate">Alcancía</span>
+                <span className="font-display text-[12px] font-extrabold text-[#62fae3] tabular-nums">
+                  +{analytics.alcanciaBonus} pts
+                </span>
+              </div>
+              <div className="py-2 px-1.5 rounded-xl bg-white/12">
+                <span className="text-[10px] text-white/80 block truncate">Gasto Hormiga</span>
+                <span className="font-display text-[12px] font-extrabold text-[#ffb2b9] tabular-nums">
+                  -{analytics.hormigaPenalty} pts
+                </span>
               </div>
             </div>
           </div>

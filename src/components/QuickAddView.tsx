@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   CATEGORIES,
   CURRENCIES,
@@ -45,6 +45,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
   const [newGoalName, setNewGoalName] = useState('');
   const [newGoalTargetRaw, setNewGoalTargetRaw] = useState('');
   const [savedFeedback, setSavedFeedback] = useState(false);
+  const amountInputRef = useRef<HTMLInputElement | null>(null);
 
   const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
   const numericAmount = parseFloat(amountRaw) || 0;
@@ -67,7 +68,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
     }
   };
 
-  const handleKeyPress = (key: string) => {
+  const handleKeyPress = useCallback((key: string) => {
     if (key === 'C') {
       setAmountRaw('');
       return;
@@ -91,7 +92,36 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
       if (parts[0].length >= 11 && parts.length === 1) return prev;
       return prev + key;
     });
-  };
+  }, []);
+
+  // Permite escribir con el teclado físico de la PC en cualquier momento sin tener que hacer clic primero en el campo
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const activeEl = document.activeElement as HTMLElement | null;
+      const tag = activeEl?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') {
+        return;
+      }
+
+      if (/^[0-9]$/.test(e.key)) {
+        e.preventDefault();
+        handleKeyPress(e.key);
+      } else if (e.key === 'Backspace') {
+        e.preventDefault();
+        handleKeyPress('BACK');
+      } else if (e.key === 'Delete' || e.key === 'Escape') {
+        e.preventDefault();
+        handleKeyPress('C');
+      } else if (e.key === '.' || e.key === ',') {
+        e.preventDefault();
+        handleKeyPress('DEC');
+      }
+    };
+
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [handleKeyPress]);
 
   const handleCreateGoalInline = () => {
     const target = parseFloat(newGoalTargetRaw) || 0;
@@ -338,9 +368,10 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
           </div>
         )}
 
-        {/* 2. Visor de Monto en Vivo */}
+        {/* 2. Visor de Monto en Vivo (Clic o teclado directo en PC y táctil en móvil) */}
         <div
-          className={`w-full py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative ${
+          onClick={() => amountInputRef.current?.focus()}
+          className={`w-full py-3 px-4 rounded-2xl flex flex-col items-center justify-center gap-1 relative cursor-text ${
             isDark
               ? 'bg-[#12161f] shadow-[inset_2px_2px_5px_rgba(0,0,0,0.6)]'
               : 'bg-[#f0f4f8] shadow-[inset_2px_2px_5px_rgba(15,23,42,0.08),inset_-2px_-2px_5px_rgba(255,255,255,0.9)]'
@@ -355,7 +386,10 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
             {amountRaw && (
               <button
                 type="button"
-                onClick={() => setAmountRaw('')}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setAmountRaw('');
+                }}
                 className="text-[#a42f46] dark:text-[#ffb2b9] hover:underline font-extrabold"
               >
                 Limpiar
@@ -376,6 +410,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
               {curr.symbol}
             </span>
             <input
+              ref={amountInputRef}
               type="text"
               inputMode="decimal"
               aria-label="Monto del movimiento"
