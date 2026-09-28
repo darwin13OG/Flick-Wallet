@@ -1,4 +1,4 @@
-import { CategoryMeta, CurrencyCode, GenderKey, Movement, UserProfile } from '../types/wallet';
+import { CategoryMeta, CurrencyCode, GenderKey, UserProfile } from '../types/wallet';
 
 export const WALLET_ICON_URL =
   'https://lh3.googleusercontent.com/aida/AEtjO1WYalp3sa-7HsKGvD7T0bnBKBcIdJJD-Dy0YdtZf2HKS5yBwxML94FUoFh28UJEkjIEuPP1xSyjH5_6OWT2Pb3CfinQ2LHkM7gRGuD0rJpZzRSPgS19yOVnsqc5GFc5cKNVgsgDBWp327ciKEH2pVjrNC2tfnJsrKHMFskM2y90yXJAh_Pf6s-5f6wUOxZoGTBVRZfqtl8lA0loaKH6IkP8JGqTDCypE8DM8LAzJD3Gj0rpgeiEWGmAtjgV';
@@ -264,7 +264,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'cafe',
     name: 'Café & Antojos',
     icon: 'local_cafe',
-    emoji: 'local_cafe',
     defaultType: 'hormiga',
     bgLight: 'bg-[#ffe4e6]',
     textLight: 'text-[#9f1239]',
@@ -276,7 +275,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'streaming',
     name: 'Streaming & Apps',
     icon: 'smart_display',
-    emoji: 'smart_display',
     defaultType: 'hormiga',
     bgLight: 'bg-[#f3e8ff]',
     textLight: 'text-[#6b21a8]',
@@ -288,7 +286,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'delivery',
     name: 'Delivery & Snacks',
     icon: 'delivery_dining',
-    emoji: 'delivery_dining',
     defaultType: 'hormiga',
     bgLight: 'bg-[#ffedd5]',
     textLight: 'text-[#9a3412]',
@@ -300,7 +297,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'ocio',
     name: 'Ocio & Juegos',
     icon: 'sports_esports',
-    emoji: 'sports_esports',
     defaultType: 'hormiga',
     bgLight: 'bg-[#fef9c3]',
     textLight: 'text-[#854d0e]',
@@ -312,7 +308,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'vivienda',
     name: 'Vivienda & Renta',
     icon: 'home',
-    emoji: 'home',
     defaultType: 'fijo',
     bgLight: 'bg-[#e2dfff]',
     textLight: 'text-[#321ed2]',
@@ -324,7 +319,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'supermercado',
     name: 'Supermercado',
     icon: 'shopping_cart',
-    emoji: 'shopping_cart',
     defaultType: 'fijo',
     bgLight: 'bg-[#dbeafe]',
     textLight: 'text-[#1e40af]',
@@ -336,7 +330,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'servicios',
     name: 'Luz, Agua & Fibra',
     icon: 'bolt',
-    emoji: 'bolt',
     defaultType: 'fijo',
     bgLight: 'bg-[#e0f2fe]',
     textLight: 'text-[#0369a1]',
@@ -348,7 +341,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'transporte',
     name: 'Transporte & Auto',
     icon: 'directions_car',
-    emoji: 'directions_car',
     defaultType: 'fijo',
     bgLight: 'bg-[#f1f5f9]',
     textLight: 'text-[#334155]',
@@ -360,7 +352,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'salud',
     name: 'Salud & Gym',
     icon: 'fitness_center',
-    emoji: 'fitness_center',
     defaultType: 'fijo',
     bgLight: 'bg-[#fce7f3]',
     textLight: 'text-[#9d174d]',
@@ -372,7 +363,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'sueldo',
     name: 'Sueldo & Nómina',
     icon: 'payments',
-    emoji: 'payments',
     defaultType: 'ingreso',
     bgLight: 'bg-[#62fae3]',
     textLight: 'text-[#005047]',
@@ -384,7 +374,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'freelance',
     name: 'Freelance & Extra',
     icon: 'rocket_launch',
-    emoji: 'rocket_launch',
     defaultType: 'ingreso',
     bgLight: 'bg-[#ccfbf1]',
     textLight: 'text-[#115e59]',
@@ -396,7 +385,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'alcancia',
     name: 'Alcancía de Ahorro',
     icon: 'savings',
-    emoji: 'savings',
     defaultType: 'alcancia',
     bgLight: 'bg-[#e2dfff]',
     textLight: 'text-[#321ed2]',
@@ -408,7 +396,6 @@ export const CATEGORIES: Record<CategoryMeta['id'], CategoryMeta> = {
     id: 'otros',
     name: 'Otros',
     icon: 'category',
-    emoji: 'category',
     defaultType: 'fijo',
     bgLight: 'bg-[#eaeef2]',
     textLight: 'text-[#464555]',
@@ -432,5 +419,3 @@ export const DEFAULT_USER_PROFILE: UserProfile = {
   goals: [],
   configuredAt: new Date().toISOString(),
 };
-
-export const DEMO_MOVEMENTS: Movement[] = [];

@@ -5,7 +5,9 @@ import { WalletClayLogo } from './ClayAvatar';
 const resolveNotifIcon = (val?: string) =>
   val && /^[a-z0-9_]+$/.test(val) ? val : 'notifications_active';
 
-// Pleasant Web Audio API Chime (Zero external audio dependencies, works offline)
+// Singleton Web Audio API Context (prevents browser 6-AudioContext limit & memory leaks)
+let sharedAudioCtx: AudioContext | null = null;
+
 export function playNotificationChime(enabled = true) {
   if (!enabled || typeof window === 'undefined') return;
   try {
@@ -13,7 +15,13 @@ export function playNotificationChime(enabled = true) {
       window.AudioContext ||
       (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!AudioCtx) return;
-    const ctx = new AudioCtx();
+    if (!sharedAudioCtx || sharedAudioCtx.state === 'closed') {
+      sharedAudioCtx = new AudioCtx();
+    }
+    if (sharedAudioCtx.state === 'suspended') {
+      sharedAudioCtx.resume().catch(() => {});
+    }
+    const ctx = sharedAudioCtx;
 
     const playTone = (freq: number, startTime: number, duration: number, peakGain: number) => {
       const osc = ctx.createOscillator();
@@ -27,6 +35,10 @@ export function playNotificationChime(enabled = true) {
 
       osc.connect(gain);
       gain.connect(ctx.destination);
+      osc.onended = () => {
+        osc.disconnect();
+        gain.disconnect();
+      };
       osc.start(startTime);
       osc.stop(startTime + duration + 0.02);
     };

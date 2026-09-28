@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   CURRENCIES,
   formatCurrencyAmount,
@@ -29,7 +29,6 @@ interface SubscriptionsDebtsViewProps {
     actionTab?: ActiveTab;
     actionLabel?: string;
   }) => void;
-  onNavigate: (tab: ActiveTab) => void;
   hideBalance: boolean;
   isDark: boolean;
 }
@@ -94,14 +93,27 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
   const curr = CURRENCIES[profile.currency || 'USD'] || CURRENCIES.USD;
   const fmt = (val: number) => formatCurrencyAmount(val, curr.code);
 
-  const currentMonthKey = new Date().toISOString().slice(0, 7);
-  const todayDay = new Date().getDate();
+  const currentMonthKey = useMemo(() => new Date().toISOString().slice(0, 7), []);
+  const todayDay = useMemo(() => new Date().getDate(), []);
 
-  const totalMonthlyCommitment = reminders.reduce((acc, r) => acc + r.amount, 0);
-  const totalPendingThisMonth = reminders
-    .filter((r) => !r.paidMonths.includes(currentMonthKey))
-    .reduce((acc, r) => acc + r.amount, 0);
-  const pendingCount = reminders.filter((r) => !r.paidMonths.includes(currentMonthKey)).length;
+  const { totalMonthlyCommitment, totalPendingThisMonth, pendingCount } = useMemo(() => {
+    let totalMonthly = 0;
+    let totalPending = 0;
+    let pending = 0;
+    for (let i = 0; i < reminders.length; i++) {
+      const r = reminders[i];
+      totalMonthly += r.amount;
+      if (!r.paidMonths.includes(currentMonthKey)) {
+        totalPending += r.amount;
+        pending++;
+      }
+    }
+    return {
+      totalMonthlyCommitment: totalMonthly,
+      totalPendingThisMonth: totalPending,
+      pendingCount: pending,
+    };
+  }, [reminders, currentMonthKey]);
 
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -169,9 +181,13 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
     }
   };
 
-  const filteredReminders = reminders
-    .filter((r) => filterKind === 'all' || r.kind === filterKind)
-    .sort((a, b) => a.dayOfMonth - b.dayOfMonth);
+  const filteredReminders = useMemo(
+    () =>
+      reminders
+        .filter((r) => filterKind === 'all' || r.kind === filterKind)
+        .sort((a, b) => a.dayOfMonth - b.dayOfMonth),
+    [reminders, filterKind]
+  );
 
   const cardCls = isDark
     ? 'bg-[#1b202c] text-slate-100 shadow-[0_14px_28px_-6px_rgba(0,0,0,0.45),inset_2px_2px_4px_rgba(255,255,255,0.06)]'

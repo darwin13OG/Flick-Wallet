@@ -23,7 +23,6 @@ export interface CategoryMeta {
   id: CategoryId;
   name: string;
   icon: string;
-  emoji: string;
   defaultType: MovementType;
   bgLight: string;
   textLight: string;

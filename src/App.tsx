@@ -174,6 +174,8 @@ export default function App() {
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const checkedDueOnStartupRef = useRef(false);
+  const movementsRef = useRef(movements);
+  movementsRef.current = movements;
 
   useEffect(() => {
     try {
@@ -273,48 +275,6 @@ export default function App() {
     [profile.notificationSound, profile.notificationsEnabled]
   );
 
-  // Check pending reminders and alert user
-  const handleCheckPendingRemindersNotification = useCallback(() => {
-    const currentMonthKey = new Date().toISOString().slice(0, 7);
-    const todayDay = new Date().getDate();
-    const pending = reminders.filter((r) => !r.paidMonths.includes(currentMonthKey));
-
-    if (pending.length === 0) {
-      handleTriggerNotification({
-        title: 'Estás al día con tus pagos',
-        body: 'No tienes suscripciones, arriendo, gym ni deudas pendientes por pagar en este momento.',
-        emoji: 'check_circle',
-        accent: 'mint',
-        actionTab: 'pagos',
-        actionLabel: 'Ver calendario',
-      });
-      return;
-    }
-
-    const urgent = pending.find((r) => r.dayOfMonth - todayDay <= 3);
-    const target = urgent || pending[0];
-    const diff = target.dayOfMonth - todayDay;
-
-    handleTriggerNotification({
-      title:
-        diff < 0
-          ? `Pago vencido: ${target.title}`
-          : diff === 0
-          ? `Hoy vence ${target.title}`
-          : `Próximo pago: ${target.title} (Día ${target.dayOfMonth})`,
-      body: `Recuerda tu compromiso de ${curr.symbol}${formatCurrencyAmount(
-        target.amount,
-        curr.code
-      )} ${curr.code}. Tienes ${pending.length} ${
-        pending.length === 1 ? 'pago pendiente' : 'pagos pendientes'
-      } este mes.`,
-      emoji: 'event_repeat',
-      accent: diff < 0 ? 'rose' : diff <= 3 ? 'amber' : 'indigo',
-      actionTab: 'pagos',
-      actionLabel: 'Gestionar Pagos',
-    });
-  }, [reminders, curr.symbol, curr.code, handleTriggerNotification]);
-
   // Automatic startup check for due/overdue reminders
   useEffect(() => {
     if (!onboardingCompleted || isLocked || checkedDueOnStartupRef.current) return;
@@ -376,7 +336,7 @@ export default function App() {
 
     const build9pmMessage = () => {
       const todayKey = getLocalDateKey(new Date());
-      const todayMovementsCount = movements.filter(
+      const todayMovementsCount = movementsRef.current.filter(
         (m) => m.date && m.date.slice(0, 10) === todayKey
       ).length;
       return todayMovementsCount === 0
@@ -458,7 +418,6 @@ export default function App() {
     onboardingCompleted,
     profile.notificationsEnabled,
     profile.dailyReminder9pm,
-    movements,
     handleTriggerNotification,
   ]);
 
@@ -1099,7 +1058,6 @@ export default function App() {
               onDeleteReminder={handleDeleteReminder}
               onAddMovement={handleAddMovement}
               onTriggerNotification={handleTriggerNotification}
-              onNavigate={setActiveTab}
               hideBalance={hideBalance}
               isDark={isDark}
             />
@@ -1114,7 +1072,6 @@ export default function App() {
               profile={profile}
               reminders={reminders}
               onUpdateProfile={handleUpdateProfile}
-              onLockNow={() => setIsLocked(true)}
               onExportBackup={handleExportBackup}
               onImportBackup={handleImportBackup}
               onResetAllApp={handleResetAllApp}

@@ -29,6 +29,19 @@ interface DashboardViewProps {
   isDark: boolean;
 }
 
+const formatRelativeDate = (iso: string) => {
+  try {
+    const d = new Date(iso);
+    const diffHours = Math.round((Date.now() - d.getTime()) / (1000 * 60 * 60));
+    if (diffHours < 1) return 'Hace unos min';
+    if (diffHours < 24) return `Hace ${diffHours}h`;
+    if (diffHours < 48) return 'Ayer';
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  } catch {
+    return 'Reciente';
+  }
+};
+
 export const DashboardView: React.FC<DashboardViewProps> = ({
   profile,
   movements,
@@ -96,12 +109,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
       hormigaLimit > 0 ? Math.min(Math.round((totalHormiga / hormigaLimit) * 100), 100) : 0;
 
     const totalSavedInGoals = savingsGoals.reduce((acc, g) => acc + g.savedAmount, 0);
-    const pendingRemindersCount = reminders.filter(
-      (r) => !r.paidMonths.includes(currentMonthKey)
-    ).length;
-    const pendingRemindersAmount = reminders
-      .filter((r) => !r.paidMonths.includes(currentMonthKey))
-      .reduce((acc, r) => acc + r.amount, 0);
+    let pendingRemindersCount = 0;
+    let pendingRemindersAmount = 0;
+    for (let i = 0; i < reminders.length; i++) {
+      const r = reminders[i];
+      if (!r.paidMonths.includes(currentMonthKey)) {
+        pendingRemindersCount++;
+        pendingRemindersAmount += r.amount;
+      }
+    }
 
     return {
       totalIncome,
@@ -158,19 +174,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
     () => filteredMovements.slice(0, visibleLimit),
     [filteredMovements, visibleLimit]
   );
-
-  const formatRelativeDate = (iso: string) => {
-    try {
-      const d = new Date(iso);
-      const diffHours = Math.round((Date.now() - d.getTime()) / (1000 * 60 * 60));
-      if (diffHours < 1) return 'Hace unos min';
-      if (diffHours < 24) return `Hace ${diffHours}h`;
-      if (diffHours < 48) return 'Ayer';
-      return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
-    } catch {
-      return 'Reciente';
-    }
-  };
 
   const handleOpenHormigaEditor = () => {
     setHormigaLimitInput(stats.hormigaLimit > 0 ? String(stats.hormigaLimit) : '');

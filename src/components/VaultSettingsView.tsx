@@ -13,7 +13,6 @@ interface VaultSettingsViewProps {
   profile: UserProfile;
   reminders: PaymentReminder[];
   onUpdateProfile: (updated: Partial<UserProfile>) => void;
-  onLockNow: () => void;
   onExportBackup: () => void;
   onImportBackup: (file: File) => Promise<boolean>;
   onResetAllApp: () => void;
@@ -33,7 +32,6 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
   profile,
   reminders,
   onUpdateProfile,
-  onLockNow,
   onExportBackup,
   onImportBackup,
   onResetAllApp,
