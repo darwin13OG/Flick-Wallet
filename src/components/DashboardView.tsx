@@ -14,6 +14,7 @@ import {
   SavingsGoal,
   UserProfile,
 } from '../types/wallet';
+import { AntIcon } from './AntIcon';
 
 interface DashboardViewProps {
   profile: UserProfile;
@@ -415,13 +416,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           <div className={`rounded-3xl p-6 flex flex-col gap-4 ${cardCls}`}>
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-4 min-w-0">
-                <div className="w-13 h-13 shrink-0 rounded-2xl bg-[#ffdadc] text-[#400010] flex items-center justify-center shadow-[0_6px_14px_rgba(164,47,70,0.2),inset_2px_2px_4px_rgba(255,255,255,0.85)]">
-                  <span
-                    className="material-symbols-outlined text-[25px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    bug_report
-                  </span>
+                <div className="w-13 h-13 shrink-0 rounded-2xl bg-[#ffdadc] text-[#7a0016] flex items-center justify-center shadow-[0_6px_14px_rgba(164,47,70,0.2),inset_2px_2px_4px_rgba(255,255,255,0.85)]">
+                  <AntIcon className="w-6 h-6" />
                 </div>
                 <div className="flex flex-col gap-0.5 min-w-0">
                   <h3 className="font-display text-[16px] font-extrabold leading-snug">

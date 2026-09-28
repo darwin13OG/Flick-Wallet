@@ -7,6 +7,7 @@ import {
   parseTypedCurrencyInput,
 } from '../constants/walletData';
 import { CurrencyCode, GenderKey, UserProfile } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 import { WalletClayLogo } from './ClayAvatar';
 
 interface OnboardingViewProps {
@@ -404,9 +405,9 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                 >
                   <div className="flex items-center gap-3 min-w-0 pr-2">
                     <div
-                      className={`w-10 h-10 shrink-0 rounded-2xl flex items-center justify-center text-lg ${goal.badgeBg} ${goal.shadow}`}
+                      className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center overflow-hidden ${goal.badgeBg} ${goal.shadow}`}
                     >
-                      {goal.emoji}
+                      <AppIcon name={goal.icon} className="text-[22px]" filled />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-display text-[16px] font-semibold truncate">

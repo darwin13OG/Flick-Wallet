@@ -13,6 +13,7 @@ import {
   SavingsGoal,
   UserProfile,
 } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 
 interface QuickAddViewProps {
   profile: UserProfile;
@@ -175,30 +176,34 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
             {
               id: 'hormiga' as MovementType,
               label: 'Hormiga',
-              icon: 'bug_report',
-              activeCls:
-                'border-[#a42f46] bg-[#ffdadc]/60 text-[#400010] dark:bg-rose-500/25 dark:text-rose-200',
+              icon: 'ant',
+              activeCls: isDark
+                ? 'border-[#fb7185] bg-rose-500/25 text-white'
+                : 'border-[#a42f46] bg-[#ffdadc] text-[#400010]',
             },
             {
               id: 'fijo' as MovementType,
               label: 'Gasto Fijo',
               icon: 'home',
-              activeCls:
-                'border-[#493ee5] bg-[#e2dfff]/60 text-[#0f0069] dark:bg-indigo-500/25 dark:text-indigo-200',
+              activeCls: isDark
+                ? 'border-[#818cf8] bg-[#635bff]/35 text-white'
+                : 'border-[#493ee5] bg-[#e2dfff] text-[#1e1b4b]',
             },
             {
               id: 'ingreso' as MovementType,
               label: 'Ingreso',
               icon: 'payments',
-              activeCls:
-                'border-[#006b5f] bg-[#62fae3]/60 text-[#00201c] dark:bg-emerald-500/25 dark:text-emerald-200',
+              activeCls: isDark
+                ? 'border-[#34d399] bg-emerald-500/25 text-white'
+                : 'border-[#006b5f] bg-[#62fae3] text-[#00201c]',
             },
             {
               id: 'alcancia' as MovementType,
               label: 'En Alcancía',
               icon: 'savings',
-              activeCls:
-                'border-[#635bff] bg-[#e2dfff]/80 text-[#321ed2] dark:bg-[#635bff]/30 dark:text-indigo-100',
+              activeCls: isDark
+                ? 'border-[#a5b4fc] bg-[#635bff]/40 text-white'
+                : 'border-[#493ee5] bg-[#d8d4ff] text-[#1e1b4b]',
             },
           ].map((item) => {
             const active = movType === item.id;
@@ -211,17 +216,12 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                   active
                     ? `${item.activeCls} shadow-xs`
                     : isDark
-                    ? 'border-transparent bg-[#12161f] text-slate-400'
-                    : 'border-transparent bg-[#f0f4f8] text-[#464555]'
+                    ? 'border-transparent bg-[#12161f] text-slate-300'
+                    : 'border-transparent bg-[#f0f4f8] text-[#171c1f]'
                 }`}
               >
-                <span
-                  className="material-symbols-outlined text-[18px]"
-                  style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
-                >
-                  {item.icon}
-                </span>
-                <span className="font-display text-[11px] font-bold leading-tight">
+                <AppIcon name={item.icon} className="text-[18px]" filled={active} />
+                <span className="font-display text-[11.5px] font-extrabold leading-tight">
                   {item.label}
                 </span>
               </button>

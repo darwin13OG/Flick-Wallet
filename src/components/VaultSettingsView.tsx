@@ -571,7 +571,11 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
               <button
                 type="button"
                 onClick={() => setConfirmingReset(true)}
-                className="w-full py-3.5 px-4 rounded-2xl bg-[#ffdad6] text-[#93000a] dark:bg-rose-500/20 dark:text-rose-200 font-display text-[13px] font-extrabold flex items-center justify-center gap-2 transition-all active:scale-98"
+                className={`w-full py-3.5 px-4 rounded-2xl font-display text-[13px] font-extrabold flex items-center justify-center gap-2 transition-all active:scale-98 ${
+                  isDark
+                    ? 'bg-rose-500/25 text-rose-100 border border-rose-500/40'
+                    : 'bg-[#ffdadc] text-[#7a0016] border border-[#f43f5e]/30'
+                }`}
               >
                 <span className="material-symbols-outlined text-[18px]">restart_alt</span>
                 <span>Reiniciar Todo</span>
