@@ -1,0 +1,6 @@
+{
+  "name": "FlickWallet",
+  "description": "Billetera personal interactiva con diseño Claymorphism 3D, control de gastos hormiga, analíticas financieras y bóveda 100% privada.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
