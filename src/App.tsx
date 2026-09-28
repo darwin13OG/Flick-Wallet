@@ -505,8 +505,8 @@ export default function App() {
     );
   }
 
-  // STEP 1: Initial Registration & Questionnaire (only shown before completing onboarding)
-  if (!onboardingCompleted) {
+  // STEP 1: Initial Registration & Questionnaire (shown until name and monthlyIncome > 0 are completed)
+  if (!onboardingCompleted || !profile.monthlyIncome || profile.monthlyIncome <= 0) {
     return (
       <main
         className={`flex flex-col justify-center relative w-full min-h-screen transition-colors duration-200 ${

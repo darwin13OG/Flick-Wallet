@@ -429,14 +429,24 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                   id="settings-monthly-income"
                   type="text"
                   inputMode="decimal"
+                  required
                   value={formatLiveNumberString(incomeRaw, curr.code)}
                   onChange={(e) => {
                     const canonical = parseTypedCurrencyInput(e.target.value, curr.code);
                     setIncomeRaw(canonical);
                     const val = parseFloat(canonical);
-                    onUpdateProfile({ monthlyIncome: !isNaN(val) && val >= 0 ? val : 0 });
+                    if (!isNaN(val) && val > 0) {
+                      onUpdateProfile({ monthlyIncome: val });
+                    }
                   }}
-                  placeholder="0"
+                  onBlur={() => {
+                    const val = parseFloat(incomeRaw);
+                    if (isNaN(val) || val <= 0) {
+                      setIncomeRaw(String(profile.monthlyIncome || ''));
+                      showToast('El ingreso mensual es obligatorio y debe ser mayor a 0.');
+                    }
+                  }}
+                  placeholder="Ingresa tu ingreso mensual"
                   className={`w-full h-11 pl-10 pr-4 rounded-2xl font-display text-[15px] font-bold tabular-nums focus:outline-none ${inputWell}`}
                 />
               </div>

@@ -23,13 +23,18 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
   onComplete,
   isDark,
 }) => {
-  const [step, setStep] = useState<1 | 2>(1);
+  const [step, setStep] = useState<1 | 2>(() =>
+    profile.name && profile.name.trim().length > 0 && (!profile.monthlyIncome || profile.monthlyIncome <= 0)
+      ? 2
+      : 1
+  );
   const [name, setName] = useState(profile.name || '');
   const [incomeRaw, setIncomeRaw] = useState(
     profile.monthlyIncome && profile.monthlyIncome > 0
       ? String(profile.monthlyIncome)
       : ''
   );
+  const [incomeError, setIncomeError] = useState(false);
   const [selectedGoals, setSelectedGoals] = useState<string[]>(
     profile.goals?.length ? profile.goals : []
   );
@@ -65,9 +70,17 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedIncome = parseFloat(incomeRaw) || 0;
+    if (parsedIncome <= 0) {
+      setIncomeError(true);
+      const el = document.getElementById('monthly-income');
+      el?.focus();
+      return;
+    }
+
+    setIncomeError(false);
     setSubmitting(true);
 
-    const parsedIncome = parseFloat(incomeRaw) || 0;
     onUpdateProfile({
       name: name.trim(),
       monthlyIncome: parsedIncome,
@@ -270,7 +283,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
         <form className="flex flex-col gap-6" onSubmit={handleSubmit}>
           {/* Input Card: Moneda e Ingresos Estimados */}
           <div className={`rounded-3xl p-6 flex flex-col gap-3 ${cardSurface}`}>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
               <label
                 className="font-display text-[12px] font-bold flex items-center gap-1.5"
                 htmlFor="monthly-income"
@@ -283,7 +296,10 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                     payments
                   </span>
                 </span>
-                Ingresos Mensuales Estimados
+                <span>Ingresos Mensuales Estimados</span>
+                <span className="font-display text-[10px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff] ml-1">
+                  · Obligatorio
+                </span>
               </label>
 
               {/* Selector de Moneda Principal */}
@@ -342,19 +358,32 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                 id="monthly-income"
                 type="text"
                 inputMode="decimal"
+                required
                 value={formattedIncomeDisplay}
                 onChange={(e) => {
                   const canonical = parseTypedCurrencyInput(e.target.value, activeCurrency.code);
                   setIncomeRaw(canonical);
                   const val = parseFloat(canonical);
+                  if (!isNaN(val) && val > 0) {
+                    setIncomeError(false);
+                  }
                   onUpdateProfile({
                     monthlyIncome: !isNaN(val) && val >= 0 ? val : 0,
                   });
                 }}
-                placeholder="0"
-                className={`w-full h-13 py-3 pl-10 pr-4 rounded-2xl font-display text-[16px] font-semibold tabular-nums focus:outline-none transition-all duration-200 ${inputWell}`}
+                placeholder="Ingresa tu sueldo o ingreso mensual"
+                className={`w-full h-13 py-3 pl-10 pr-4 rounded-2xl font-display text-[16px] font-semibold tabular-nums focus:outline-none transition-all duration-200 ${
+                  incomeError ? 'ring-2 ring-rose-500' : ''
+                } ${inputWell}`}
               />
             </div>
+
+            {incomeError && (
+              <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#ffdadc] text-[#7a0016] font-display text-[11.5px] font-bold">
+                <span className="material-symbols-outlined text-[16px]">error</span>
+                <span>Es obligatorio ingresar tus ingresos mensuales (mayor a 0) para continuar.</span>
+              </div>
+            )}
 
             <div className="flex items-center gap-1.5 px-1">
               <span
