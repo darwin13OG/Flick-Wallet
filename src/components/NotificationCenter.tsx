@@ -1,5 +1,6 @@
 import React from 'react';
 import { ActiveTab, AppNotification } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 import { WalletClayLogo } from './ClayAvatar';
 
 const resolveNotifIcon = (val?: string) =>
@@ -136,7 +137,7 @@ export const FloatingNotificationToasts: React.FC<FloatingNotificationToastsProp
                 aria-label="Cerrar"
                 className="w-4 h-4 rounded-full flex items-center justify-center opacity-50 hover:opacity-100"
               >
-                <span className="material-symbols-outlined text-[13px]">close</span>
+                <AppIcon name="close" size={13} />
               </button>
             </div>
           </div>
@@ -156,12 +157,7 @@ export const FloatingNotificationToasts: React.FC<FloatingNotificationToastsProp
               </p>
             </div>
             <div className="w-8 h-8 rounded-xl bg-[#e2dfff]/70 dark:bg-[#635bff]/25 text-[#493ee5] dark:text-[#c3c0ff] flex items-center justify-center shrink-0 mt-0.5">
-              <span
-                className="material-symbols-outlined text-[18px]"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                {resolveNotifIcon(toast.emoji)}
-              </span>
+              <AppIcon name={resolveNotifIcon(toast.emoji)} size={18} />
             </div>
           </div>
         </div>
@@ -218,7 +214,7 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
                 isDark ? 'bg-[#1b202c] text-slate-300' : 'bg-white text-[#171c1f] shadow-xs'
               }`}
             >
-              <span className="material-symbols-outlined text-[17px]">close</span>
+              <AppIcon name="close" size={17} />
             </button>
           </div>
 
@@ -229,7 +225,7 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
               }`}
             >
               <div className="w-12 h-12 rounded-2xl bg-[#e2dfff]/70 text-[#493ee5] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">notifications_none</span>
+                <AppIcon name="notifications_none" size={24} />
               </div>
               <p className="font-display text-[14px] font-extrabold">Sin notificaciones</p>
             </div>
@@ -260,9 +256,7 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
                   }`}
                 >
                   <div className="w-9 h-9 rounded-xl bg-[#e2dfff]/70 dark:bg-[#635bff]/20 text-[#493ee5] dark:text-[#c3c0ff] flex items-center justify-center shrink-0">
-                    <span className="material-symbols-outlined text-[18px]">
-                      {resolveNotifIcon(n.emoji)}
-                    </span>
+                    <AppIcon name={resolveNotifIcon(n.emoji)} size={18} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <span className="font-display text-[12.5px] font-extrabold block truncate">
@@ -290,7 +284,7 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
           }}
           className="w-full py-2.5 px-4 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-bold flex items-center justify-center gap-1.5"
         >
-          <span className="material-symbols-outlined text-[16px]">settings</span>
+          <AppIcon name="settings" size={16} />
           <span>Ajustes</span>
         </button>
       </div>

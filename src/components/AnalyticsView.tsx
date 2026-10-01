@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CATEGORIES, CURRENCIES, formatCurrencyAmount } from '../constants/walletData';
 import { Movement, UserProfile } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 
 interface AnalyticsViewProps {
   profile: UserProfile;
@@ -174,7 +175,7 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center">
-              <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+              <AppIcon name="calendar_month" size={20} />
             </div>
             <div>
               <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#635bff] dark:text-[#c3c0ff] block">
@@ -406,12 +407,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                 <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-4 pointer-events-none">
                   {activeItem ? (
                     <>
-                      <span
-                        className="material-symbols-outlined text-[22px] text-[#493ee5] dark:text-[#c3c0ff]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        {activeItem.meta.icon}
-                      </span>
+                      <AppIcon
+                        name={activeItem.meta.icon}
+                        size={22}
+                        className="text-[#493ee5] dark:text-[#c3c0ff]"
+                      />
                       <span className="font-display text-[20px] font-extrabold tabular-nums">
                         {activeItem.percent}%
                       </span>
@@ -518,9 +518,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[19px] text-[#493ee5] dark:text-[#c3c0ff]">
-                          {item.meta.icon}
-                        </span>
+                        <AppIcon
+                          name={item.meta.icon}
+                          size={19}
+                          className="text-[#493ee5] dark:text-[#c3c0ff]"
+                        />
                         <span className="font-display text-[13px] font-bold">{item.meta.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
@@ -578,9 +580,11 @@ export const AnalyticsView: React.FC<AnalyticsViewProps> = ({
                       }`}
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <span className="material-symbols-outlined text-[19px] text-[#493ee5] dark:text-[#c3c0ff]">
-                          {cat.icon}
-                        </span>
+                        <AppIcon
+                          name={cat.icon}
+                          size={19}
+                          className="text-[#493ee5] dark:text-[#c3c0ff]"
+                        />
                         <div className="min-w-0">
                           <span className="font-display text-[13px] font-bold block truncate">
                             {mov.title}

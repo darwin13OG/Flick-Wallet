@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { AlcanciaView } from './components/AlcanciaView';
 import { AnalyticsView } from './components/AnalyticsView';
+import { AppIcon } from './components/AntIcon';
 import { UserClayAvatar, WalletClayLogo } from './components/ClayAvatar';
 import { DashboardView } from './components/DashboardView';
 import {
@@ -24,6 +25,7 @@ import {
 import {
   ActiveTab,
   AppNotification,
+  GenderKey,
   Movement,
   PaymentReminder,
   SavingsGoal,
@@ -48,7 +50,10 @@ export default function App() {
       const saved = localStorage.getItem(STORAGE_KEYS.PROFILE);
       if (saved) {
         const parsed = JSON.parse(saved);
-        const gKey = parsed.gender in GENDER_DATA ? parsed.gender : 'hombre';
+        const gKey: GenderKey =
+          parsed.gender && parsed.gender in GENDER_DATA
+            ? (parsed.gender as GenderKey)
+            : 'hombre';
         const rawPin = String(parsed.pinCode || '')
           .replace(/\D/g, '')
           .slice(0, 4);
@@ -56,6 +61,7 @@ export default function App() {
           ...DEFAULT_USER_PROFILE,
           ...parsed,
           gender: gKey,
+          avatarImg: GENDER_DATA[gKey].img,
           pinCode: rawPin.length === 4 ? rawPin : '',
           notificationsEnabled: parsed.notificationsEnabled !== false,
           notificationSound: parsed.notificationSound !== false,
@@ -849,7 +855,7 @@ export default function App() {
                   isDark ? 'bg-[#1b202c] text-[#62fae3]' : 'bg-[#f0f4f8] text-[#493ee5]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">notifications</span>
+                <AppIcon name="notifications" size={18} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#e11d48] text-white font-display text-[9px] font-extrabold flex items-center justify-center">
                     {unreadCount}
@@ -897,7 +903,7 @@ export default function App() {
                 : 'bg-[#635bff] shadow-[0_14px_28px_-4px_rgba(99,91,255,0.5),inset_2px_3px_5px_rgba(255,255,255,0.6),inset_-2px_-3px_5px_rgba(15,0,105,0.35)] hover:brightness-105'
             }`}
           >
-            <span className="material-symbols-outlined text-[20px]">add</span>
+            <AppIcon name="add" size={20} />
             <span>Nuevo Movimiento</span>
           </button>
 
@@ -921,14 +927,7 @@ export default function App() {
                   }`}
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      style={{
-                        fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0",
-                      }}
-                    >
-                      {item.icon}
-                    </span>
+                    <AppIcon name={item.icon} size={20} />
                     <span className="truncate">{item.label}</span>
                   </div>
                   {typeof item.badge === 'number' && item.badge > 0 && (
@@ -987,7 +986,7 @@ export default function App() {
                     : 'bg-white text-[#493ee5] shadow-[0_4px_10px_rgba(15,23,42,0.06)]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">notifications</span>
+                <AppIcon name="notifications" size={18} />
                 {unreadCount > 0 && (
                   <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full bg-[#e11d48] text-white font-display text-[9px] font-extrabold flex items-center justify-center">
                     {unreadCount}
@@ -1105,14 +1104,7 @@ export default function App() {
                 : 'text-[#777587] hover:text-[#171c1f]'
             }`}
           >
-            <span
-              className="material-symbols-outlined text-[21px]"
-              style={{
-                fontVariationSettings: activeTab === 'dashboard' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              space_dashboard
-            </span>
+            <AppIcon name="space_dashboard" size={21} />
             <span className="font-display text-[9px] font-bold mt-0.5">Inicio</span>
           </button>
 
@@ -1128,14 +1120,7 @@ export default function App() {
                 : 'text-[#777587] hover:text-[#171c1f]'
             }`}
           >
-            <span
-              className="material-symbols-outlined text-[21px]"
-              style={{
-                fontVariationSettings: activeTab === 'alcancia' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              savings
-            </span>
+            <AppIcon name="savings" size={21} />
             <span className="font-display text-[9px] font-bold mt-0.5">Alcancía</span>
           </button>
 
@@ -1151,7 +1136,7 @@ export default function App() {
                   : 'bg-[#635bff] shadow-[0_14px_28px_-4px_rgba(99,91,255,0.55),inset_2px_3px_5px_rgba(255,255,255,0.75),inset_-2px_-3px_5px_rgba(15,0,105,0.4)]'
               }`}
             >
-              <span className="material-symbols-outlined text-[26px] font-bold">add</span>
+              <AppIcon name="add" size={26} />
             </button>
           </div>
 
@@ -1167,14 +1152,7 @@ export default function App() {
                 : 'text-[#777587] hover:text-[#171c1f]'
             }`}
           >
-            <span
-              className="material-symbols-outlined text-[21px]"
-              style={{
-                fontVariationSettings: activeTab === 'pagos' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              event_repeat
-            </span>
+            <AppIcon name="event_repeat" size={21} />
             <span className="font-display text-[9px] font-bold mt-0.5">Pagos</span>
           </button>
 
@@ -1190,14 +1168,7 @@ export default function App() {
                 : 'text-[#777587] hover:text-[#171c1f]'
             }`}
           >
-            <span
-              className="material-symbols-outlined text-[21px]"
-              style={{
-                fontVariationSettings: activeTab === 'analytics' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              donut_large
-            </span>
+            <AppIcon name="donut_large" size={21} />
             <span className="font-display text-[9px] font-bold mt-0.5">Analíticas</span>
           </button>
 
@@ -1213,14 +1184,7 @@ export default function App() {
                 : 'text-[#777587] hover:text-[#171c1f]'
             }`}
           >
-            <span
-              className="material-symbols-outlined text-[21px]"
-              style={{
-                fontVariationSettings: activeTab === 'vault' ? "'FILL' 1" : "'FILL' 0",
-              }}
-            >
-              settings
-            </span>
+            <AppIcon name="settings" size={21} />
             <span className="font-display text-[9px] font-bold mt-0.5">Ajustes</span>
           </button>
         </div>

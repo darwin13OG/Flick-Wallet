@@ -250,7 +250,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                     : 'border-transparent bg-[#f0f4f8] text-[#171c1f]'
                 }`}
               >
-                <AppIcon name={item.icon} className="text-[18px]" filled={active} />
+                <AppIcon name={item.icon} size={18} />
                 <span className="font-display text-[11.5px] font-extrabold leading-tight">
                   {item.label}
                 </span>
@@ -298,9 +298,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                             : 'bg-white text-[#171c1f]'
                         }`}
                       >
-                        <span className="material-symbols-outlined text-[15px]">
-                          {resolveGoalIcon(g.emoji)}
-                        </span>
+                        <AppIcon name={resolveGoalIcon(g.emoji)} size={15} />
                         <span>{g.name}</span>
                         <span className="opacity-75">
                           ({curr.symbol}
@@ -449,7 +447,7 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
               className={`h-11 rounded-xl font-display text-[19px] font-extrabold flex items-center justify-center transition-all ${keyBtnCls}`}
             >
               {key === 'BACK' ? (
-                <span className="material-symbols-outlined text-[20px]">backspace</span>
+                <AppIcon name="backspace" size={20} />
               ) : key === 'DEC' ? (
                 curr.decimalSep
               ) : (
@@ -468,9 +466,10 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
               : 'bg-[#635bff] shadow-[0_14px_28px_-6px_rgba(99,91,255,0.45),inset_2px_3px_5px_rgba(255,255,255,0.6),inset_-2px_-3px_5px_rgba(15,0,105,0.35)]'
           }`}
         >
-          <span className="material-symbols-outlined text-[20px]">
-            {savedFeedback ? 'check_circle' : movType === 'alcancia' ? 'savings' : 'add_task'}
-          </span>
+          <AppIcon
+            name={savedFeedback ? 'check_circle' : movType === 'alcancia' ? 'savings' : 'add_task'}
+            size={20}
+          />
           <span>
             {savedFeedback
               ? 'Guardado en tu Billetera'
@@ -523,18 +522,17 @@ export const QuickAddView: React.FC<QuickAddViewProps> = ({
                       : 'border-transparent bg-[#f0f4f8]'
                   }`}
                 >
-                  <span
-                    className={`material-symbols-outlined text-[20px] ${
+                  <AppIcon
+                    name={cat.icon}
+                    size={20}
+                    className={
                       selected
                         ? 'text-[#493ee5] dark:text-[#c3c0ff]'
                         : isDark
                         ? 'text-slate-300'
                         : 'text-[#464555]'
-                    }`}
-                    style={{ fontVariationSettings: selected ? "'FILL' 1" : "'FILL' 0" }}
-                  >
-                    {cat.icon}
-                  </span>
+                    }
+                  />
                   <span className="font-display text-[10px] font-bold truncate w-full text-center">
                     {cat.name.split(' ')[0]}
                   </span>

@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { UserProfile } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 import { UserClayAvatar, WalletClayLogo } from './ClayAvatar';
 
 interface PinLockScreenProps {
@@ -157,7 +158,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
               className={`h-13 rounded-2xl font-display text-[20px] font-extrabold flex items-center justify-center transition-all ${keyBtnCls}`}
             >
               {k === 'BACK' ? (
-                <span className="material-symbols-outlined text-[20px]">backspace</span>
+                <AppIcon name="backspace" size={20} />
               ) : k === 'CLEAR' ? (
                 <span className="text-[12px] font-bold opacity-70">Limpiar</span>
               ) : (

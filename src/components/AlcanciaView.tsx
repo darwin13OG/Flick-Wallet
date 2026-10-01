@@ -6,6 +6,7 @@ import {
   parseTypedCurrencyInput,
 } from '../constants/walletData';
 import { SavingsGoal, UserProfile } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 
 interface AlcanciaViewProps {
   profile: UserProfile;
@@ -120,12 +121,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
       <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-[#006b5f] via-[#0d9488] to-[#115e59] text-white shadow-[0_20px_36px_-8px_rgba(13,148,136,0.42),inset_3px_4px_7px_rgba(255,255,255,0.35),inset_-4px_-4px_8px_rgba(0,40,35,0.4)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="w-13 h-13 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shadow-[inset_2px_2px_4px_rgba(255,255,255,0.6)] shrink-0">
-            <span
-              className="material-symbols-outlined text-[26px] text-[#62fae3]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              savings
-            </span>
+            <AppIcon name="savings" size={26} className="text-[#62fae3]" />
           </div>
           <div className="min-w-0">
             <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#62fae3] block">
@@ -152,9 +148,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
           onClick={() => setShowCreateForm((v) => !v)}
           className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#62fae3] text-[#00201c] font-display text-[13px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_10px_20px_rgba(0,0,0,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-transform shrink-0"
         >
-          <span className="material-symbols-outlined text-[18px]">
-            {showCreateForm ? 'close' : 'add'}
-          </span>
+          <AppIcon name={showCreateForm ? 'close' : 'add'} size={18} />
           <span>{showCreateForm ? 'Cerrar formulario' : 'Nueva Meta de Ahorro'}</span>
         </button>
       </div>
@@ -237,12 +231,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                         : 'bg-[#f0f4f8] text-[#464555]'
                     }`}
                   >
-                    <span
-                      className="material-symbols-outlined text-[20px]"
-                      style={{ fontVariationSettings: selected ? "'FILL' 1" : "'FILL' 0" }}
-                    >
-                      {ic.id}
-                    </span>
+                    <AppIcon name={ic.id} size={20} />
                   </button>
                 );
               })}
@@ -262,7 +251,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
       {savingsGoals.length === 0 ? (
         <div className={`rounded-3xl p-8 text-center flex flex-col items-center gap-3 ${cardCls}`}>
           <div className="w-15 h-15 rounded-3xl bg-[#62fae3]/30 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center">
-            <span className="material-symbols-outlined text-[30px]">savings</span>
+            <AppIcon name="savings" size={30} />
           </div>
           <h3 className="font-display text-[17px] font-extrabold">
             Aún no tienes alcancías creadas
@@ -299,12 +288,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3.5 min-w-0 flex-1">
                     <div className="w-12 h-12 rounded-2xl bg-[#62fae3]/30 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
-                      <span
-                        className="material-symbols-outlined text-[24px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        {resolveGoalIcon(goal.emoji)}
-                      </span>
+                      <AppIcon name={resolveGoalIcon(goal.emoji)} size={24} />
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -337,7 +321,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                     title="Eliminar alcancía"
                     className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <AppIcon name="delete" size={18} />
                   </button>
                 </div>
 
@@ -375,7 +359,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                     }}
                     className="w-full py-2.5 px-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_6px_14px_rgba(99,91,255,0.3),inset_1px_1px_2px_rgba(255,255,255,0.6)] active:scale-98 transition-transform"
                   >
-                    <span className="material-symbols-outlined text-[17px]">savings</span>
+                    <AppIcon name="savings" size={17} />
                     <span>{isDepositing ? 'Cancelar abono' : '+ Meter dinero'}</span>
                   </button>
 
@@ -396,7 +380,7 @@ export const AlcanciaView: React.FC<AlcanciaViewProps> = ({
                         : 'bg-[#e2f8f5] text-[#004d44] border border-[#006b5f]/25 active:scale-98'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[17px]">payments</span>
+                    <AppIcon name="payments" size={17} />
                     <span>{isWithdrawing ? 'Cancelar retiro' : 'Retirar dinero'}</span>
                   </button>
                 </div>

@@ -6,6 +6,7 @@ import {
   parseTypedCurrencyInput,
 } from '../constants/walletData';
 import { ActiveTab, CurrencyCode, PaymentReminder, UserProfile } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 import { UserClayAvatar } from './ClayAvatar';
 import { usePWAInstall } from './PWAInstallPrompt';
 
@@ -215,7 +216,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
     <div className="flex flex-col gap-5 pb-8">
       {statusMessage && (
         <div className="rounded-2xl p-3.5 bg-[#62fae3] text-[#00201c] font-display text-[12px] font-bold flex items-center gap-2 shadow-md">
-          <span className="material-symbols-outlined text-[18px]">check_circle</span>
+          <AppIcon name="check_circle" size={18} />
           <span>{statusMessage}</span>
         </div>
       )}
@@ -246,7 +247,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                     }}
                     className="px-3 py-1.5 rounded-full bg-[#62fae3] text-[#00201c] font-display text-[11px] font-extrabold flex items-center gap-1 shadow-2xs"
                   >
-                    <span className="material-symbols-outlined text-[15px]">install_mobile</span>
+                    <AppIcon name="install_mobile" size={15} />
                     <span>Instalar App</span>
                   </button>
                 )}
@@ -260,9 +261,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                       : 'bg-[#f0f4f8] text-[#171c1f] shadow-2xs'
                   }`}
                 >
-                  <span className="material-symbols-outlined text-[15px]">
-                    {isDark ? 'light_mode' : 'dark_mode'}
-                  </span>
+                  <AppIcon name={isDark ? 'light_mode' : 'dark_mode'} size={15} />
                   <span>{isDark ? 'Modo Claro' : 'Modo Oscuro'}</span>
                 </button>
               </div>
@@ -315,7 +314,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                 onClick={() => fileInputRef.current?.click()}
                 className="w-full py-3.5 px-4 rounded-2xl bg-[#635bff] text-white font-display text-[13px] font-bold flex items-center justify-center gap-2 shadow-[0_12px_24px_-4px_rgba(99,91,255,0.4),inset_2px_2px_4px_rgba(255,255,255,0.6)] active:scale-95 transition-all"
               >
-                <span className="material-symbols-outlined text-[18px]">add_a_photo</span>
+                <AppIcon name="add_a_photo" size={18} />
                 <span>Subir Foto Personalizada desde mi Dispositivo</span>
               </button>
 
@@ -387,7 +386,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[19px]">notifications</span>
+                  <AppIcon name="notifications" size={19} />
                 </div>
                 <h3 className="font-display text-[16px] font-extrabold">Notificaciones</h3>
               </div>
@@ -454,9 +453,11 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
               }`}
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <span className="material-symbols-outlined text-[19px] text-[#635bff] dark:text-[#c3c0ff] shrink-0">
-                  schedule
-                </span>
+                <AppIcon
+                  name="schedule"
+                  size={19}
+                  className="text-[#635bff] dark:text-[#c3c0ff] shrink-0"
+                />
                 <div className="min-w-0">
                   <span className="font-display text-[12.5px] font-extrabold block">
                     Recordatorio a las 9:00 PM
@@ -558,7 +559,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-[#ffdadc] text-[#400010] flex items-center justify-center">
-                  <span className="material-symbols-outlined text-[19px]">lock</span>
+                  <AppIcon name="lock" size={19} />
                 </div>
                 <div>
                   <h3 className="font-display text-[16px] font-extrabold">PIN al Iniciar la App</h3>
@@ -578,7 +579,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                   : 'bg-[#fef9c3]/80 border-amber-300 text-[#854d0e]'
               }`}
             >
-              <span className="material-symbols-outlined text-[18px] shrink-0 mt-0.5">warning</span>
+              <AppIcon name="warning" size={18} className="shrink-0 mt-0.5" />
               <p className="text-[11.5px] leading-relaxed font-medium">
                 Si olvidas tu PIN <strong>se restablecerá la aplicación</strong> al no poder
                 recuperarse.
@@ -624,9 +625,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                     aria-label="Mostrar u ocultar PIN"
                     className="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                   >
-                    <span className="material-symbols-outlined text-[18px]">
-                      {showPinText ? 'visibility_off' : 'visibility'}
-                    </span>
+                    <AppIcon name={showPinText ? 'visibility_off' : 'visibility'} size={18} />
                   </button>
                 </div>
 
@@ -647,7 +646,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
 
                 {pinValidationError && (
                   <div className="px-3 py-2 rounded-xl bg-[#ffdadc] text-[#7a0016] font-display text-[11px] font-bold flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[15px]">error</span>
+                    <AppIcon name="error" size={15} />
                     <span>{pinValidationError}</span>
                   </div>
                 )}
@@ -666,7 +665,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
           <div className={`rounded-3xl p-5 lg:p-6 flex flex-col gap-3.5 ${cardCls}`}>
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-2xl bg-[#62fae3]/40 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[19px]">backup</span>
+                <AppIcon name="backup" size={19} />
               </div>
               <div>
                 <h3 className="font-display text-[16px] font-extrabold">Copia de Seguridad</h3>
@@ -693,7 +692,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                 }}
                 className="py-3 px-3.5 rounded-2xl bg-[#635bff] text-white font-display text-[12px] font-extrabold flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-transform"
               >
-                <span className="material-symbols-outlined text-[17px]">download</span>
+                <AppIcon name="download" size={17} />
                 <span>Descargar Respaldo</span>
               </button>
 
@@ -706,7 +705,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                     : 'bg-[#f0f4f8] text-[#171c1f]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[17px]">upload_file</span>
+                <AppIcon name="upload_file" size={17} />
                 <span>Restaurar Respaldo</span>
               </button>
             </div>
@@ -724,7 +723,7 @@ export const VaultSettingsView: React.FC<VaultSettingsViewProps> = ({
                     : 'bg-[#ffdadc] text-[#7a0016] border border-[#f43f5e]/30'
                 }`}
               >
-                <span className="material-symbols-outlined text-[18px]">restart_alt</span>
+                <AppIcon name="restart_alt" size={18} />
                 <span>Reiniciar Todo</span>
               </button>
             ) : (

@@ -1,11 +1,13 @@
-const CACHE_NAME = 'flickwallet-cache-v3';
+const CACHE_NAME = 'flickwallet-cache-v4';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
   '/manifest.webmanifest',
   '/icon.svg',
+  '/apple-touch-icon.png',
   '/pwa-192x192.png',
   '/pwa-512x512.png',
+  '/pwa-maskable-512x512.png',
   '/notification-badge.png'
 ];
 

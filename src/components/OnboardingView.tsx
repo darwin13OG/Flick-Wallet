@@ -167,12 +167,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
             >
               <span className="flex items-center gap-1.5">
                 <span className="w-6 h-6 rounded-lg bg-[#e2dfff] text-[#493ee5] flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-[15px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    person
-                  </span>
+                  <AppIcon name="person" size={14} />
                 </span>
                 ¿Cómo te llamas?
               </span>
@@ -195,27 +190,17 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
               />
               {name.trim().length > 0 && (
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center pointer-events-none text-[#006b5f] dark:text-[#62fae3]">
-                  <span
-                    className="material-symbols-outlined text-lg"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    check_circle
-                  </span>
+                  <AppIcon name="check_circle" size={18} />
                 </div>
               )}
             </div>
           </div>
 
-          {/* Input Card 2: ¿Cómo te identificas? (Sin caja de perfil) */}
+          {/* Input Card 2: ¿Cómo te identificas? */}
           <div className={`rounded-3xl p-6 flex flex-col gap-4 ${cardSurface}`}>
             <label className="font-display text-[12px] font-bold flex items-center gap-1.5">
               <span className="w-6 h-6 rounded-lg bg-[#e2dfff] text-[#493ee5] flex items-center justify-center">
-                <span
-                  className="material-symbols-outlined text-[15px]"
-                  style={{ fontVariationSettings: "'FILL' 1" }}
-                >
-                  face
-                </span>
+                <AppIcon name="face" size={14} />
               </span>
               ¿Cómo te identificas?
             </label>
@@ -239,12 +224,17 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                         : 'border-transparent bg-[#f0f4f8] shadow-[0_4px_10px_rgba(15,23,42,0.04),inset_1px_1px_3px_rgba(255,255,255,0.9)] hover:bg-[#eaeef2]'
                     }`}
                   >
-                    <span
-                      className="material-symbols-outlined text-[24px] mb-1 text-[#493ee5] dark:text-[#c3c0ff]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
+                    <div
+                      className={`w-11 h-11 rounded-2xl mb-1.5 flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? 'bg-[#635bff] text-white shadow-[0_6px_14px_-2px_rgba(99,91,255,0.45)]'
+                          : isDark
+                          ? 'bg-[#1b202c] text-slate-300'
+                          : 'bg-white text-[#464555] shadow-2xs'
+                      }`}
                     >
-                      {item.icon}
-                    </span>
+                      <AppIcon name={item.icon} size={22} filled={isSelected} />
+                    </div>
                     <span className="font-display text-[13px] leading-tight font-bold">
                       {item.label}
                     </span>
@@ -272,7 +262,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
               className="w-full h-15 py-4 px-8 rounded-full font-display text-[14px] font-bold tracking-wide text-white bg-[#635bff] shadow-[0_16px_32px_-6px_rgba(99,91,255,0.45),inset_2px_3px_5px_rgba(255,255,255,0.7),inset_-2px_-3px_5px_rgba(15,0,105,0.35)] active:translate-y-0.5 transition-all duration-150 flex items-center justify-center gap-2"
             >
               <span>Siguiente</span>
-              <span className="material-symbols-outlined text-xl">arrow_forward</span>
+              <AppIcon name="arrow_forward" size={18} />
             </button>
           </div>
         </form>
@@ -289,12 +279,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                 htmlFor="monthly-income"
               >
                 <span className="w-6 h-6 rounded-lg bg-[#62fae3] text-[#00201c] flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-[15px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    payments
-                  </span>
+                  <AppIcon name="payments" size={14} />
                 </span>
                 <span>Ingresos Mensuales Estimados</span>
                 <span className="font-display text-[10px] font-extrabold text-[#493ee5] dark:text-[#c3c0ff] ml-1">
@@ -380,19 +365,17 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
 
             {incomeError && (
               <div className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#ffdadc] text-[#7a0016] font-display text-[11.5px] font-bold">
-                <span className="material-symbols-outlined text-[16px]">error</span>
+                <AppIcon name="error" size={16} />
                 <span>Es obligatorio ingresar tus ingresos mensuales (mayor a 0) para continuar.</span>
               </div>
             )}
 
             <div className="flex items-center gap-1.5 px-1">
-              <span
-                className={`material-symbols-outlined text-[16px] ${
-                  isDark ? 'text-slate-400' : 'text-[#777587]'
-                }`}
-              >
-                info
-              </span>
+              <AppIcon
+                name="info"
+                size={15}
+                className={isDark ? 'text-slate-400' : 'text-[#777587]'}
+              />
               <p className={`text-[12px] ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
                 Usado para calcular tu presupuesto mensual y capacidad de ahorro en{' '}
                 {activeCurrency.name}.
@@ -436,7 +419,7 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                     <div
                       className={`w-11 h-11 shrink-0 rounded-2xl flex items-center justify-center overflow-hidden ${goal.badgeBg} ${goal.shadow}`}
                     >
-                      <AppIcon name={goal.icon} className="text-[22px]" filled />
+                      <AppIcon name={goal.icon} size={21} />
                     </div>
                     <div className="flex flex-col min-w-0">
                       <span className="font-display text-[16px] font-semibold truncate">
@@ -460,13 +443,13 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
                         : 'bg-[#eaeef2] shadow-[inset_1px_1px_2px_rgba(15,23,42,0.15)]'
                     }`}
                   >
-                    <span
-                      className={`material-symbols-outlined text-white text-[15px] font-bold transition-opacity ${
+                    <AppIcon
+                      name="check"
+                      size={14}
+                      className={`text-white transition-opacity ${
                         checked ? 'opacity-100' : 'opacity-0'
                       }`}
-                    >
-                      check
-                    </span>
+                    />
                   </div>
                 </button>
               );
@@ -487,18 +470,13 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
             >
               {submitted ? (
                 <>
-                  <span
-                    className="material-symbols-outlined text-xl"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    check_circle
-                  </span>
+                  <AppIcon name="check_circle" size={20} />
                   <span>¡Todo Listo! Entrando...</span>
                 </>
               ) : (
                 <>
                   <span>Comenzar mi experiencia</span>
-                  <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                  <AppIcon name="arrow_forward" size={19} />
                 </>
               )}
             </button>
@@ -516,12 +494,11 @@ export const OnboardingView: React.FC<OnboardingViewProps> = ({
             </button>
 
             <div className="flex items-center justify-center gap-1.5 text-center px-2 mt-1">
-              <span
-                className="material-symbols-outlined text-[#006b5f] dark:text-[#62fae3] text-base"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                lock
-              </span>
+              <AppIcon
+                name="lock"
+                size={15}
+                className="text-[#006b5f] dark:text-[#62fae3]"
+              />
               <span
                 className={`text-[12px] font-medium ${
                   isDark ? 'text-slate-400' : 'text-[#464555]'

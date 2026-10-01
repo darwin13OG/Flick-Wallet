@@ -14,7 +14,7 @@ import {
   SavingsGoal,
   UserProfile,
 } from '../types/wallet';
-import { AntIcon } from './AntIcon';
+import { AntIcon, AppIcon } from './AntIcon';
 
 interface DashboardViewProps {
   profile: UserProfile;
@@ -209,12 +209,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center gap-2">
                 <span className="w-7 h-7 rounded-xl bg-white/20 flex items-center justify-center">
-                  <span
-                    className="material-symbols-outlined text-[16px] text-[#62fae3]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    account_balance_wallet
-                  </span>
+                  <AppIcon name="account_balance_wallet" size={16} className="text-[#62fae3]" />
                 </span>
                 <span className="font-display text-[12px] font-bold uppercase tracking-wider text-white/90">
                   Saldo Total Disponible
@@ -226,9 +221,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 onClick={onToggleHideBalance}
                 className="h-8 px-3 rounded-full bg-white/15 hover:bg-white/25 active:scale-95 transition-all flex items-center gap-1.5 font-display text-[11px] font-bold"
               >
-                <span className="material-symbols-outlined text-[16px]">
-                  {hideBalance ? 'visibility' : 'visibility_off'}
-                </span>
+                <AppIcon name={hideBalance ? 'visibility' : 'visibility_off'} size={16} />
                 <span>{hideBalance ? 'Mostrar' : 'Ocultar'}</span>
               </button>
             </div>
@@ -299,9 +292,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`rounded-3xl p-4 flex flex-col justify-between gap-2 ${cardCls}`}>
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 rounded-2xl bg-[#62fae3] text-[#00201c] flex items-center justify-center shadow-[0_4px_10px_rgba(0,107,95,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)]">
-                  <span className="material-symbols-outlined text-[20px] font-bold">
-                    south_west
-                  </span>
+                  <AppIcon name="south_west" size={20} />
                 </div>
                 <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3]">
                   {stats.incomeCount} mov.
@@ -324,9 +315,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             <div className={`rounded-3xl p-4 flex flex-col justify-between gap-2 ${cardCls}`}>
               <div className="flex items-center justify-between">
                 <div className="w-9 h-9 rounded-2xl bg-[#ffdadc] text-[#400010] flex items-center justify-center shadow-[0_4px_10px_rgba(164,47,70,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)]">
-                  <span className="material-symbols-outlined text-[20px] font-bold">
-                    north_east
-                  </span>
+                  <AppIcon name="north_east" size={20} />
                 </div>
                 <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#a42f46] dark:text-[#ffb2b9]">
                   {stats.expenseCount} mov.
@@ -358,12 +347,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-[#62fae3]/40 text-[#006b5f] dark:text-[#62fae3] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
-                  <span
-                    className="material-symbols-outlined text-[24px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    savings
-                  </span>
+                  <AppIcon name="savings" size={24} />
                 </div>
                 <div className="min-w-0">
                   <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#006b5f] dark:text-[#62fae3] block">
@@ -379,9 +363,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-[20px] text-[#006b5f] dark:text-[#62fae3] group-hover:translate-x-0.5 transition-transform">
-                chevron_right
-              </span>
+              <AppIcon
+                name="chevron_right"
+                size={20}
+                className="text-[#006b5f] dark:text-[#62fae3] group-hover:translate-x-0.5 transition-transform"
+              />
             </button>
 
             <button
@@ -393,12 +379,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
             >
               <div className="flex items-center gap-3.5 min-w-0">
                 <div className="w-12 h-12 rounded-2xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center shrink-0 shadow-[inset_2px_2px_4px_rgba(255,255,255,0.8)]">
-                  <span
-                    className="material-symbols-outlined text-[24px]"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    event_repeat
-                  </span>
+                  <AppIcon name="event_repeat" size={24} />
                 </div>
                 <div className="min-w-0">
                   <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#493ee5] dark:text-[#c3c0ff] block">
@@ -414,9 +395,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                   </span>
                 </div>
               </div>
-              <span className="material-symbols-outlined text-[20px] text-[#493ee5] dark:text-[#c3c0ff] group-hover:translate-x-0.5 transition-transform">
-                chevron_right
-              </span>
+              <AppIcon
+                name="chevron_right"
+                size={20}
+                className="text-[#493ee5] dark:text-[#c3c0ff] group-hover:translate-x-0.5 transition-transform"
+              />
             </button>
           </div>
 
@@ -544,7 +527,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                         : 'bg-white text-[#493ee5] shadow-2xs hover:bg-[#e2dfff]/50'
                     }`}
                   >
-                    <span className="material-symbols-outlined text-[13px]">edit</span>
+                    <AppIcon name="edit" size={13} />
                     <span>{stats.hormigaLimit > 0 ? 'Cambiar tope' : 'Poner tope'}</span>
                   </button>
                   <span className="font-display text-[13px] font-extrabold tabular-nums">
@@ -590,9 +573,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                     }`}
                   >
                     <div className="flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-[#a42f46] dark:text-[#ffb2b9]">
-                        {cat.icon}
-                      </span>
+                      <AppIcon
+                        name={cat.icon}
+                        size={16}
+                        className="text-[#a42f46] dark:text-[#ffb2b9]"
+                      />
                       <span className="font-display text-[11px] font-bold truncate">
                         {cat.name.split(' ')[0]}
                       </span>
@@ -660,13 +645,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
           </div>
 
           <div className="relative">
-            <span
-              className={`material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-[18px] ${
+            <AppIcon
+              name="search"
+              size={18}
+              className={` absolute left-3.5 top-1/2 -translate-y-1/2 ${
                 isDark ? 'text-slate-500' : 'text-[#777587]'
               }`}
-            >
-              search
-            </span>
+            />
             <input
               type="text"
               value={searchQuery}
@@ -688,7 +673,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               className={`rounded-3xl p-8 text-center flex flex-col items-center gap-2 ${cardCls}`}
             >
               <div className="w-12 h-12 rounded-2xl bg-[#e2dfff]/60 text-[#493ee5] flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">receipt_long</span>
+                <AppIcon name="receipt_long" size={24} />
               </div>
               <p className="font-display text-[15px] font-bold">Sin movimientos registrados</p>
               <p className={`text-[12px] ${isDark ? 'text-slate-400' : 'text-[#464555]'}`}>
@@ -719,12 +704,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                               : `${cat.bgLight} ${cat.textLight}`
                           }`}
                         >
-                          <span
-                            className="material-symbols-outlined text-[20px]"
-                            style={{ fontVariationSettings: "'FILL' 1" }}
-                          >
-                            {cat.icon}
-                          </span>
+                          <AppIcon name={cat.icon} size={20} />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
                           <span className="font-display text-[14.5px] font-bold leading-snug break-words">
@@ -774,7 +754,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                           title="Eliminar movimiento"
                           className="w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors"
                         >
-                          <span className="material-symbols-outlined text-[16px]">delete</span>
+                          <AppIcon name="delete" size={16} />
                         </button>
                       </div>
                     </div>

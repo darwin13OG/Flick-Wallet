@@ -49,7 +49,7 @@ export const UserClayAvatar: React.FC<UserAvatarProps> = ({
     >
       <img
         src={resolvedSrc}
-        alt={`Avatar de ${profile.name}`}
+        alt={`Avatar de ${profile.name || 'Usuario'}`}
         referrerPolicy="no-referrer"
         onError={() => setImgError(true)}
         className={`w-full h-full rounded-full object-cover object-center shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] transition-all duration-200 ${
@@ -77,7 +77,7 @@ export const WalletClayLogo: React.FC<{ size?: 'sm' | 'lg' }> = ({ size = 'lg' }
           alt="FlickWallet Icon"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
-          className="relative z-10 w-7 h-7 object-contain drop-shadow-[0_4px_6px_rgba(73,62,229,0.25)]"
+          className="relative z-10 w-7 h-7 rounded-lg object-contain drop-shadow-[0_4px_6px_rgba(73,62,229,0.25)]"
         />
       </div>
     );
@@ -91,7 +91,7 @@ export const WalletClayLogo: React.FC<{ size?: 'sm' | 'lg' }> = ({ size = 'lg' }
           alt="FlickWallet 3D Claymorphic Wallet Icon"
           referrerPolicy="no-referrer"
           onError={() => setImgError(true)}
-          className="w-full h-full object-contain filter drop-shadow-[0_8px_12px_rgba(73,62,229,0.25)]"
+          className="w-full h-full rounded-xl object-contain filter drop-shadow-[0_8px_12px_rgba(73,62,229,0.25)]"
           src={imgError ? WALLET_SVG_FALLBACK : WALLET_ICON_URL}
         />
       </div>

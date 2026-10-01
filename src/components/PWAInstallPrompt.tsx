@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { AppIcon } from './AntIcon';
 import { WalletClayLogo } from './ClayAvatar';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -130,7 +131,7 @@ export const PWAEntryPrompt: React.FC<PWAEntryPromptProps> = ({
             aria-label="Cerrar aviso"
             className="w-8 h-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-200"
           >
-            <span className="material-symbols-outlined text-[18px]">close</span>
+            <AppIcon name="close" size={18} />
           </button>
         </div>
 
@@ -169,7 +170,7 @@ export const PWAEntryPrompt: React.FC<PWAEntryPromptProps> = ({
             onClick={handleInstallClick}
             className="flex-1 py-3.5 px-4 rounded-2xl bg-[#635bff] text-white font-display text-[13px] font-bold flex items-center justify-center gap-2 shadow-[0_12px_24px_-4px_rgba(99,91,255,0.45),inset_2px_2px_4px_rgba(255,255,255,0.6)] active:scale-95 transition-all"
           >
-            <span className="material-symbols-outlined text-[18px]">download_for_offline</span>
+            <AppIcon name="download_for_offline" size={18} />
             <span>{showManualSteps ? 'Entendido' : 'Instalar App Nativa'}</span>
           </button>
           <button
@@ -213,7 +214,7 @@ export const PWAInstallHeaderButton: React.FC<{ isDark: boolean }> = ({ isDark }
             : 'bg-[#e2dfff] text-[#321ed2] shadow-2xs'
         }`}
       >
-        <span className="material-symbols-outlined text-[16px]">install_mobile</span>
+        <AppIcon name="install_mobile" size={16} />
         <span className="hidden sm:inline">Instalar App</span>
       </button>
 

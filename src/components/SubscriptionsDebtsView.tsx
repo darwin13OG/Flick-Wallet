@@ -13,6 +13,7 @@ import {
   ReminderKind,
   UserProfile,
 } from '../types/wallet';
+import { AppIcon } from './AntIcon';
 
 interface SubscriptionsDebtsViewProps {
   profile: UserProfile;
@@ -203,12 +204,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
       <div className="rounded-3xl p-5 sm:p-6 bg-gradient-to-br from-[#493ee5] via-[#635bff] to-[#312e81] text-white shadow-[0_20px_36px_-8px_rgba(99,91,255,0.45),inset_3px_4px_7px_rgba(255,255,255,0.4),inset_-4px_-4px_8px_rgba(15,0,105,0.4)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3.5 min-w-0">
           <div className="w-13 h-13 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shadow-[inset_2px_2px_4px_rgba(255,255,255,0.6)] shrink-0">
-            <span
-              className="material-symbols-outlined text-[26px] text-[#62fae3]"
-              style={{ fontVariationSettings: "'FILL' 1" }}
-            >
-              event_repeat
-            </span>
+            <AppIcon name="event_repeat" size={26} className="text-[#62fae3]" />
           </div>
           <div className="min-w-0">
             <span className="font-display text-[10px] font-extrabold uppercase tracking-wider text-[#62fae3] block">
@@ -239,9 +235,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
           onClick={() => setShowAddForm((v) => !v)}
           className="w-full sm:w-auto px-4 py-3 rounded-2xl bg-[#62fae3] text-[#00201c] font-display text-[13px] font-extrabold flex items-center justify-center gap-1.5 shadow-[0_10px_20px_rgba(0,0,0,0.2),inset_1px_1px_2px_rgba(255,255,255,0.8)] active:scale-95 transition-transform shrink-0"
         >
-          <span className="material-symbols-outlined text-[18px]">
-            {showAddForm ? 'close' : 'add'}
-          </span>
+          <AppIcon name={showAddForm ? 'close' : 'add'} size={18} />
           <span>{showAddForm ? 'Cerrar formulario' : 'Añadir Compromiso'}</span>
         </button>
       </div>
@@ -281,12 +275,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
                       : 'border-transparent bg-[#f0f4f8] text-[#464555]'
                   }`}
                 >
-                  <span
-                    className="material-symbols-outlined text-[19px] shrink-0"
-                    style={{ fontVariationSettings: active ? "'FILL' 1" : "'FILL' 0" }}
-                  >
-                    {m.icon}
-                  </span>
+                  <AppIcon name={m.icon} size={19} className="shrink-0" />
                   <span className="truncate">{m.label}</span>
                 </button>
               );
@@ -434,7 +423,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
                     : 'bg-white text-[#464555]'
                 }`}
               >
-                <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
+                <AppIcon name={tab.icon} size={15} />
                 <span>{tab.label}</span>
               </button>
             );
@@ -458,7 +447,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
       {filteredReminders.length === 0 ? (
         <div className={`rounded-3xl p-8 text-center flex flex-col items-center gap-3 ${cardCls}`}>
           <div className="w-15 h-15 rounded-3xl bg-[#e2dfff] text-[#321ed2] flex items-center justify-center">
-            <span className="material-symbols-outlined text-[30px]">event_repeat</span>
+            <AppIcon name="event_repeat" size={30} />
           </div>
           <h3 className="font-display text-[17px] font-extrabold">
             Sin compromisos registrados aquí
@@ -512,12 +501,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
                           : 'bg-[#e2dfff]/70 text-[#321ed2] dark:bg-[#635bff]/20 dark:text-[#c3c0ff]'
                       }`}
                     >
-                      <span
-                        className="material-symbols-outlined text-[23px]"
-                        style={{ fontVariationSettings: "'FILL' 1" }}
-                      >
-                        {isPaid ? 'check_circle' : meta.icon}
-                      </span>
+                      <AppIcon name={isPaid ? 'check_circle' : meta.icon} size={23} />
                     </div>
 
                     <div className="flex flex-col gap-1 min-w-0 flex-1">
@@ -572,7 +556,7 @@ export const SubscriptionsDebtsView: React.FC<SubscriptionsDebtsViewProps> = ({
                     title="Eliminar compromiso"
                     className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-400 hover:text-rose-500 transition-colors shrink-0"
                   >
-                    <span className="material-symbols-outlined text-[18px]">delete</span>
+                    <AppIcon name="delete" size={18} />
                   </button>
                 </div>
 
