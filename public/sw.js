@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flickwallet-cache-v4';
+const CACHE_NAME = 'flickwallet-cache-v5';
 const PRECACHE_URLS = [
   '/',
   '/index.html',
@@ -8,7 +8,8 @@ const PRECACHE_URLS = [
   '/pwa-192x192.png',
   '/pwa-512x512.png',
   '/pwa-maskable-512x512.png',
-  '/notification-badge.png'
+  '/notification-badge.png',
+  '/material-symbols-outlined.woff2'
 ];
 
 let reminderTimeoutId = null;
