@@ -108,7 +108,7 @@ export const FloatingNotificationToasts: React.FC<FloatingNotificationToastsProp
         <div
           key={toast.id}
           onClick={() => onAction(toast.id, toast.actionTab)}
-          className={`pointer-events-auto cursor-pointer rounded-[20px] px-3.5 py-2.5 border backdrop-blur-xl transition-all duration-200 active:scale-98 ${
+          className={`pointer-events-auto cursor-pointer rounded-[20px] px-3.5 py-2.5 border backdrop-blur-xl transition-all duration-200 active:scale-98 pop-in ${
             isDark
               ? 'bg-[#1c212e]/95 border-white/12 text-slate-100 shadow-[0_14px_30px_rgba(0,0,0,0.55)]'
               : 'bg-white/95 border-slate-200/80 text-[#171c1f] shadow-[0_14px_30px_rgba(15,23,42,0.16)]'
@@ -188,9 +188,9 @@ export const NotificationCenterDrawer: React.FC<NotificationCenterDrawerProps> =
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/40 backdrop-blur-xs transition-opacity duration-200">
       <div
-        className={`w-full max-w-sm h-full flex flex-col justify-between p-5 overflow-y-auto shadow-2xl ${
+        className={`w-full max-w-sm h-full flex flex-col justify-between p-5 overflow-y-auto shadow-2xl drawer-slide-in ${
           isDark ? 'bg-[#171c28] text-slate-100' : 'bg-[#f6fafe] text-[#171c1f]'
         }`}
       >

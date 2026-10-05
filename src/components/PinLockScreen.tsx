@@ -108,7 +108,7 @@ export const PinLockScreen: React.FC<PinLockScreenProps> = ({
         {/* 4 PIN Boxes */}
         <div
           className={`flex items-center justify-center gap-3 my-1 ${
-            errorShake ? 'animate-bounce' : ''
+            errorShake ? 'error-shake' : ''
           }`}
         >
           {[0, 1, 2, 3].map((idx) => {

@@ -1009,76 +1009,78 @@ export default function App() {
 
         {/* Main Content Container (Responsive Mobile + Tablet + PC) */}
         <main className="flex-1 w-full max-w-md md:max-w-3xl lg:max-w-6xl mx-auto px-4 sm:px-6 lg:px-10 pt-3 lg:pt-8 pb-24 lg:pb-12">
-          {activeTab === 'dashboard' && (
-            <DashboardView
-              profile={profile}
-              movements={movements}
-              savingsGoals={savingsGoals}
-              reminders={reminders}
-              hideBalance={hideBalance}
-              onToggleHideBalance={() => setHideBalance((h) => !h)}
-              onUpdateProfile={handleUpdateProfile}
-              onDeleteMovement={handleDeleteMovement}
-              onNavigate={setActiveTab}
-              isDark={isDark}
-            />
-          )}
+          <div key={activeTab} className="view-enter">
+            {activeTab === 'dashboard' && (
+              <DashboardView
+                profile={profile}
+                movements={movements}
+                savingsGoals={savingsGoals}
+                reminders={reminders}
+                hideBalance={hideBalance}
+                onToggleHideBalance={() => setHideBalance((h) => !h)}
+                onUpdateProfile={handleUpdateProfile}
+                onDeleteMovement={handleDeleteMovement}
+                onNavigate={setActiveTab}
+                isDark={isDark}
+              />
+            )}
 
-          {activeTab === 'add' && (
-            <QuickAddView
-              profile={profile}
-              savingsGoals={savingsGoals}
-              onAddGoal={handleAddGoal}
-              onAddMovement={handleAddMovement}
-              onSuccessNavigate={() => setActiveTab('dashboard')}
-              isDark={isDark}
-            />
-          )}
+            {activeTab === 'add' && (
+              <QuickAddView
+                profile={profile}
+                savingsGoals={savingsGoals}
+                onAddGoal={handleAddGoal}
+                onAddMovement={handleAddMovement}
+                onSuccessNavigate={() => setActiveTab('dashboard')}
+                isDark={isDark}
+              />
+            )}
 
-          {activeTab === 'alcancia' && (
-            <AlcanciaView
-              profile={profile}
-              savingsGoals={savingsGoals}
-              onAddGoal={handleAddGoal}
-              onDepositToGoal={handleDepositToGoal}
-              onWithdrawFromGoal={handleWithdrawFromGoal}
-              onDeleteGoal={handleDeleteGoal}
-              hideBalance={hideBalance}
-              isDark={isDark}
-            />
-          )}
+            {activeTab === 'alcancia' && (
+              <AlcanciaView
+                profile={profile}
+                savingsGoals={savingsGoals}
+                onAddGoal={handleAddGoal}
+                onDepositToGoal={handleDepositToGoal}
+                onWithdrawFromGoal={handleWithdrawFromGoal}
+                onDeleteGoal={handleDeleteGoal}
+                hideBalance={hideBalance}
+                isDark={isDark}
+              />
+            )}
 
-          {activeTab === 'pagos' && (
-            <SubscriptionsDebtsView
-              profile={profile}
-              reminders={reminders}
-              onAddReminder={handleAddReminder}
-              onTogglePaidReminder={handleTogglePaidReminder}
-              onDeleteReminder={handleDeleteReminder}
-              onAddMovement={handleAddMovement}
-              onTriggerNotification={handleTriggerNotification}
-              hideBalance={hideBalance}
-              isDark={isDark}
-            />
-          )}
+            {activeTab === 'pagos' && (
+              <SubscriptionsDebtsView
+                profile={profile}
+                reminders={reminders}
+                onAddReminder={handleAddReminder}
+                onTogglePaidReminder={handleTogglePaidReminder}
+                onDeleteReminder={handleDeleteReminder}
+                onAddMovement={handleAddMovement}
+                onTriggerNotification={handleTriggerNotification}
+                hideBalance={hideBalance}
+                isDark={isDark}
+              />
+            )}
 
-          {activeTab === 'analytics' && (
-            <AnalyticsView profile={profile} movements={movements} isDark={isDark} />
-          )}
+            {activeTab === 'analytics' && (
+              <AnalyticsView profile={profile} movements={movements} isDark={isDark} />
+            )}
 
-          {activeTab === 'vault' && (
-            <VaultSettingsView
-              profile={profile}
-              reminders={reminders}
-              onUpdateProfile={handleUpdateProfile}
-              onExportBackup={handleExportBackup}
-              onImportBackup={handleImportBackup}
-              onResetAllApp={handleResetAllApp}
-              onTriggerNotification={handleTriggerNotification}
-              isDark={isDark}
-              onToggleDark={() => setIsDark((d) => !d)}
-            />
-          )}
+            {activeTab === 'vault' && (
+              <VaultSettingsView
+                profile={profile}
+                reminders={reminders}
+                onUpdateProfile={handleUpdateProfile}
+                onExportBackup={handleExportBackup}
+                onImportBackup={handleImportBackup}
+                onResetAllApp={handleResetAllApp}
+                onTriggerNotification={handleTriggerNotification}
+                isDark={isDark}
+                onToggleDark={() => setIsDark((d) => !d)}
+              />
+            )}
+          </div>
         </main>
       </div>
 
