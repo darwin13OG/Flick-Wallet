@@ -6,6 +6,13 @@
   Cache-Control: public, max-age=0, must-revalidate
 
 /og-banner.jpg
+  Access-Control-Allow-Origin: *
+  Content-Type: image/jpeg
+  Cache-Control: public, max-age=86400
+
+/og-banner.png
+  Access-Control-Allow-Origin: *
+  Content-Type: image/png
   Cache-Control: public, max-age=86400
 
 /assets/*
